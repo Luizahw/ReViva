@@ -1,0 +1,8 @@
+﻿{
+  "name": "reviva-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Estrutura inicial planejada para o back-end do projeto ReViva.",
+  "scripts": {},
+  "dependencies": {}
+}
