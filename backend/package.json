@@ -1,8 +1,23 @@
-﻿{
+{
   "name": "reviva-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Estrutura inicial planejada para o back-end do projeto ReViva.",
-  "scripts": {},
-  "dependencies": {}
+  "description": "API do projeto ReViva com autenticação e persistência MySQL.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.24.6"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
 }

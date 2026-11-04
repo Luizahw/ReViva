@@ -1,0 +1,80 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { pool } = require('../database/conexao');
+
+const emailValido = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+async function cadastrar(req, res, next) {
+  try {
+    const { nome, email, senha } = req.body || {};
+    if (typeof nome !== 'string' || typeof email !== 'string' || typeof senha !== 'string' || !nome.trim() || !email.trim() || !senha) {
+      return res.status(400).json({ mensagem: 'Nome, e-mail e senha são obrigatórios.' });
+    }
+    if (!emailValido(email.trim())) return res.status(400).json({ mensagem: 'Formato de e-mail inválido.' });
+    if (senha.length < 8) return res.status(400).json({ mensagem: 'A senha deve ter pelo menos 8 caracteres.' });
+    if (nome.trim().length > 120 || email.trim().length > 255) {
+      return res.status(400).json({ mensagem: 'Nome ou e-mail excede o tamanho permitido.' });
+    }
+
+    const emailNormalizado = email.trim().toLowerCase();
+    const [existentes] = await pool.execute('SELECT id_usuario FROM usuarios WHERE email = ? LIMIT 1', [emailNormalizado]);
+    if (existentes.length) return res.status(409).json({ mensagem: 'Este e-mail já está cadastrado.' });
+
+    const hash = await bcrypt.hash(senha, 12);
+    const [resultado] = await pool.execute(
+      "INSERT INTO usuarios (nome, email, senha, tipo_usuario, pontos) VALUES (?, ?, ?, 'comum', 0)",
+      [nome.trim(), emailNormalizado, hash]
+    );
+    return res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso.', usuario: {
+      id_usuario: resultado.insertId, nome: nome.trim(), email: emailNormalizado, tipo_usuario: 'comum', pontos: 0
+    } });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') return res.status(409).json({ mensagem: 'Este e-mail já está cadastrado.' });
+    return next(error);
+  }
+}
+
+async function login(req, res, next) {
+  try {
+    const { email, senha } = req.body || {};
+    if (typeof email !== 'string' || typeof senha !== 'string' || !email.trim() || !senha) {
+      return res.status(400).json({ mensagem: 'E-mail e senha são obrigatórios.' });
+    }
+    const [usuarios] = await pool.execute(
+      'SELECT id_usuario, nome, email, senha, tipo_usuario, pontos FROM usuarios WHERE email = ? LIMIT 1',
+      [email.trim().toLowerCase()]
+    );
+    const usuario = usuarios[0];
+    if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {
+      return res.status(401).json({ mensagem: 'E-mail ou senha incorretos.' });
+    }
+
+    const duracao = process.env.JWT_EXPIRES_IN || '1h';
+    const token = jwt.sign(
+      { tipo_usuario: usuario.tipo_usuario },
+      process.env.JWT_SECRET,
+      { subject: String(usuario.id_usuario), expiresIn: duracao, algorithm: 'HS256' }
+    );
+    return res.status(200).json({ mensagem: 'Login realizado com sucesso.', token, tipo: 'Bearer', expiresIn: duracao, usuario: {
+      id_usuario: usuario.id_usuario, nome: usuario.nome, email: usuario.email,
+      tipo_usuario: usuario.tipo_usuario, pontos: usuario.pontos
+    } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function perfil(req, res, next) {
+  try {
+    const [usuarios] = await pool.execute(
+      'SELECT id_usuario, nome, email, tipo_usuario, pontos, data_cadastro FROM usuarios WHERE id_usuario = ? LIMIT 1',
+      [req.usuario.id_usuario]
+    );
+    if (!usuarios.length) return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+    return res.status(200).json({ usuario: usuarios[0] });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { cadastrar, login, perfil };
