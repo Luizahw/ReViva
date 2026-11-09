@@ -1,138 +1,27 @@
-# ReViva — Backend ♻️
+# Backend ReViva
 
-## Sobre
+API Node.js 24 com Express, ES Modules, MySQL, bcryptjs e JWT.
 
-O backend do ReViva é responsável pelo processamento das informações, comunicação com o banco de dados MySQL, cadastro e login dos usuários e controle de acesso ao sistema.
+## Preparação
 
-## Tecnologias utilizadas
+Na raiz do projeto, crie o banco e as tabelas executando `sql/schema.sql` no MySQL. Dentro de `backend`, copie `.env.example` para `.env` e informe as credenciais reais do seu MySQL e uma chave JWT aleatória com pelo menos 32 caracteres. O `.env` não deve ser enviado ao Git.
 
-- Node.js
-- Express
-- MySQL
-- mysql2
-- bcryptjs
-- jsonwebtoken (JWT)
-- dotenv
-- cors
-- nodemon
+As dependências já estão declaradas em `package.json` e registradas no `package-lock.json`. Em uma instalação nova, execute `npm install` dentro de `backend`.
 
-## Estrutura de pastas
+## Executar
 
-```text
-backend/
-├── controllers/
-│   └── usuariosController.js
-├── database/
-│   └── conexao.js
-├── middlewares/
-│   └── usuariosMiddleware.js
-├── routes/
-│   └── usuariosRoutes.js
-├── server.js
-├── package.json
-├── .env
-└── README.md
-```
+Dentro de `backend`, use `npm run dev` para desenvolvimento ou `npm start`. O servidor testa a conexão MySQL antes de abrir a porta configurada por `PORT` (padrão `3000`).
 
-## Banco de dados
+## Rotas
 
-O backend utiliza o MySQL para armazenar as informações do sistema.
+| Método | Rota | Acesso |
+| --- | --- | --- |
+| GET | `/api/health` | Público |
+| POST | `/api/usuarios/cadastro` | Público |
+| POST | `/api/usuarios/login` | Público |
+| GET | `/api/usuarios/me` | JWT válido |
+| GET | `/api/usuarios/admin` | JWT de administrador |
 
-O banco de dados se chama `reviva` e possui quatro tabelas:
+Cadastro recebe `nome`, `email` e `senha` em JSON. Login recebe `email` e `senha`; a resposta inclui o JWT Bearer. Para rotas protegidas, envie `Authorization: Bearer <token>`. Usuários comuns recebem `403` na rota `/api/usuarios/admin`.
 
-- **usuarios:** dados dos usuários cadastrados;
-- **materiais:** informações sobre materiais recicláveis;
-- **pontos_coleta:** locais de coleta;
-- **reciclagens:** registros das atividades de reciclagem.
-
-As tabelas possuem relacionamentos por meio de chaves primárias e estrangeiras.
-
-## Funcionalidades implementadas
-
-- Cadastro de usuários;
-- Validação de dados;
-- Verificação de e-mails duplicados;
-- Criptografia de senhas com bcryptjs;
-- Login de usuários;
-- Geração de tokens JWT;
-- Verificação de autenticação;
-- Controle de acesso de administradores;
-- Conexão com o banco de dados MySQL.
-
-## Instalação
-
-Dentro da pasta `backend`, execute:
-
-```bash
-npm init -y
-```
-
-Instale as dependências:
-
-```bash
-npm install express mysql2 bcryptjs jsonwebtoken dotenv cors
-```
-
-Instale o Nodemon:
-
-```bash
-npm install --save-dev nodemon
-```
-
-## Configuração do banco de dados
-
-Crie o banco de dados executando o arquivo `reviva.sql` no MySQL Workbench.
-
-Configure o arquivo `.env` com os dados da conexão:
-
-```env
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=sua_senha
-DB_NAME=reviva
-
-JWT_SECRET=sua_chave_secreta
-JWT_EXPIRES_IN=2h
-
-PORT=3300
-```
-
-Substitua os valores de exemplo pelas configurações do seu ambiente.
-
-## Executar o servidor
-
-Para iniciar o backend em modo de desenvolvimento:
-
-```bash
-npm run dev
-```
-
-O servidor estará disponível em:
-
-```text
-http://localhost:3300
-```
-
-## Rotas disponíveis
-
-| Método | Rota | Função |
-|---|---|---|
-| GET | `/` | Verificar se a API está funcionando |
-| POST | `/api/usuarios/cadastro` | Cadastrar usuário |
-| POST | `/api/usuarios/login` | Realizar login |
-| GET | `/api/usuarios/perfil` | Consultar perfil autenticado |
-| GET | `/api/usuarios/administrador` | Acessar área administrativa |
-
-As rotas protegidas exigem um token JWT válido no cabeçalho `Authorization`, utilizando o formato `Bearer`.
-
-## Segurança
-
-- As senhas são protegidas com bcryptjs;
-- O JWT identifica os usuários autenticados;
-- As rotas protegidas verificam a validade do token;
-- O acesso administrativo possui controle de permissão;
-- As informações sensíveis ficam armazenadas no arquivo `.env`, que não deve ser enviado ao GitHub.
-
-## Status
-
-Atividade 2 — Banco de dados e autenticação implementados.
+CORS aceita qualquer origem por padrão. Para restringir, configure `CORS_ORIGIN` no `.env` com a origem do frontend.

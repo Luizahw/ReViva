@@ -1,6 +1,6 @@
-const express = require('express');
-const { cadastrar, login, perfil } = require('../controllers/usuariosController');
-const { autenticar, exigirAdministrador } = require('../middlewares/usuariosMiddleware');
+import express from 'express';
+import { cadastrar, login, perfil } from '../controllers/usuariosController.js';
+import { autenticar, exigirAdministrador } from '../middlewares/usuariosMiddleware.js';
 
 const router = express.Router();
 
@@ -12,4 +12,4 @@ router.get('/admin', autenticar, exigirAdministrador, (req, res) => {
   res.status(200).json({ mensagem: 'Acesso de administrador autorizado.' });
 });
 
-module.exports = router;
+export default router;

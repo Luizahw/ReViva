@@ -1,6 +1,6 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { pool } = require('../database/conexao');
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { pool } from '../database/conexao.js';
 
 const emailValido = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -77,4 +77,4 @@ async function perfil(req, res, next) {
   }
 }
 
-module.exports = { cadastrar, login, perfil };
+export { cadastrar, login, perfil };

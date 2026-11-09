@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 function autenticar(req, res, next) {
   const authorization = req.headers.authorization;
@@ -29,4 +29,4 @@ function exigirAdministrador(req, res, next) {
   return next();
 }
 
-module.exports = { autenticar, exigirAdministrador };
+export { autenticar, exigirAdministrador };

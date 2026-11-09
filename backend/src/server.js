@@ -1,37 +1,49 @@
-require('dotenv').config();
-const express = require('express');
-const usuariosRoutes = require('./routes/usuariosRoutes');
-const { pool } = require('./database/conexao');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import usuariosRoutes from './routes/usuariosRoutes.js';
+import { pool } from './database/conexao.js';
 
-const app = express();
-app.use(express.json({ limit: '10kb' }));
-app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
-app.use('/api/usuarios', usuariosRoutes);
-app.use((req, res) => res.status(404).json({ mensagem: 'Rota não encontrada.' }));
-app.use((err, req, res, next) => {
-  if (res.headersSent) return next(err);
-  console.error(err);
-  return res.status(500).json({ mensagem: 'Erro interno do servidor.' });
-});
+const variaveisObrigatorias = ['DB_HOST', 'DB_USER', 'DB_NAME', 'JWT_SECRET'];
+const ausentes = variaveisObrigatorias.filter((nome) => !process.env[nome]);
 
-const required = ['DB_HOST', 'DB_USER', 'DB_NAME', 'JWT_SECRET'];
-const missing = required.filter((key) => !process.env[key]);
-if (missing.length) {
-  console.error(`Configure as variáveis obrigatórias no .env: ${missing.join(', ')}`);
+if (ausentes.length > 0) {
+  console.error(`Configure no arquivo .env: ${ausentes.join(', ')}.`);
   process.exit(1);
 }
+
 if (process.env.JWT_SECRET.length < 32) {
   console.error('JWT_SECRET deve ter pelo menos 32 caracteres.');
   process.exit(1);
 }
 
-const port = Number(process.env.PORT) || 3000;
-pool.getConnection()
-  .then((connection) => {
-    connection.release();
-    app.listen(port, () => console.log(`API ReViva disponível em http://localhost:${port}`));
-  })
-  .catch((error) => {
-    console.error('Não foi possível conectar ao MySQL. Verifique o .env e execute sql/schema.sql.', error.message);
-    process.exit(1);
+const app = express();
+const origemPermitida = process.env.CORS_ORIGIN || '*';
+
+app.use(cors({ origin: origemPermitida }));
+app.use(express.json({ limit: '10kb' }));
+app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
+app.use('/api/usuarios', usuariosRoutes);
+app.use((req, res) => res.status(404).json({ mensagem: 'Rota não encontrada.' }));
+app.use((erro, req, res, next) => {
+  if (res.headersSent) return next(erro);
+  if (erro instanceof SyntaxError && erro.status === 400 && 'body' in erro) {
+    return res.status(400).json({ mensagem: 'O corpo da requisição contém JSON inválido.' });
+  }
+  console.error(erro);
+  return res.status(500).json({ mensagem: 'Erro interno do servidor.' });
+});
+
+const porta = Number(process.env.PORT) || 3000;
+
+try {
+  const conexao = await pool.getConnection();
+  conexao.release();
+  app.listen(porta, () => {
+    console.log(`API ReViva disponível em http://localhost:${porta}`);
   });
+} catch (erro) {
+  console.error('Não foi possível conectar ao MySQL. Confira as variáveis DB_* e se o serviço está ativo.');
+  console.error(`Código do erro: ${erro.code || 'desconhecido'}`);
+  process.exit(1);
+}
