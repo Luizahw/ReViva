@@ -6,8 +6,13 @@ const router = express.Router();
 
 router.post('/cadastro', cadastrar);
 router.post('/login', login);
+router.get('/perfil', autenticar, perfil);
+router.get('/administrador', autenticar, exigirAdministrador, (req, res) => {
+  res.status(200).json({ mensagem: 'Acesso de administrador autorizado.' });
+});
+
+// Mantém os caminhos curtos já disponibilizados anteriormente.
 router.get('/me', autenticar, perfil);
-// Rota demonstrativa para verificar a autorização, sem CRUD administrativo.
 router.get('/admin', autenticar, exigirAdministrador, (req, res) => {
   res.status(200).json({ mensagem: 'Acesso de administrador autorizado.' });
 });

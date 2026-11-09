@@ -22,6 +22,7 @@ const origemPermitida = process.env.CORS_ORIGIN || '*';
 
 app.use(cors({ origin: origemPermitida }));
 app.use(express.json({ limit: '10kb' }));
+app.get('/', (req, res) => res.status(200).json({ mensagem: 'API ReViva funcionando!' }));
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 app.use('/api/usuarios', usuariosRoutes);
 app.use((req, res) => res.status(404).json({ mensagem: 'Rota não encontrada.' }));
