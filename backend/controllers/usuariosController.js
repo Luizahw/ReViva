@@ -77,4 +77,15 @@ async function perfil(req, res, next) {
   }
 }
 
-export { cadastrar, login, perfil };
+async function listarUsuarios(req, res, next) {
+  try {
+    const [usuarios] = await pool.execute(
+      'SELECT id_usuario, nome, email, tipo_usuario, pontos, data_cadastro FROM usuarios ORDER BY id_usuario'
+    );
+    return res.status(200).json({ usuarios });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export { cadastrar, login, perfil, listarUsuarios };
