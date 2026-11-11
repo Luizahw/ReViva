@@ -11,7 +11,11 @@ if (ausentes.length) { console.error(`Configure no arquivo .env: ${ausentes.join
 if (process.env.JWT_SECRET.length < 32) { console.error('JWT_SECRET deve ter pelo menos 32 caracteres.'); process.exit(1); }
 
 const app = express();
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
+const origensPermitidas = (process.env.CORS_ORIGIN || '*').split(',').map((origem) => origem.trim()).filter(Boolean);
+app.use(cors({ origin: (origem, callback) => {
+  if (!origem || origensPermitidas.includes('*') || origensPermitidas.includes(origem)) return callback(null, true);
+  return callback(null, false);
+} }));
 app.use(express.json({ limit: '10kb' }));
 app.get('/', (req, res) => res.status(200).json({ mensagem: 'API ReViva funcionando!' }));
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));

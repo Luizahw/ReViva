@@ -8,7 +8,7 @@ API em Node.js 24, Express, ES Modules, MySQL (`mysql2`) e JWT. A Atividade 2 co
 2. Copie `.env.example` para `.env` e preencha os dados locais do MySQL. Use uma chave `JWT_SECRET` aleatória com pelo menos 32 caracteres. Nunca versione `.env`.
 3. No diretório `backend`, execute `npm install` e depois `npm run dev` (ou `npm start`).
 
-A API usa `PORT` quando definido, com padrão `3300`. O frontend pode ser servido por Live Server em `http://127.0.0.1:5500`; nesse caso configure `CORS_ORIGIN=http://127.0.0.1:5500` (ou a origem mostrada pelo Live Server). Acesse `frontend/index.html` pelo servidor estático. O Express não serve os arquivos do frontend.
+A API usa `PORT` quando definido, com padrão `3300`. O CORS aceita uma lista de origens separadas por vírgula em `CORS_ORIGIN`; o exemplo inclui `http://localhost:5500` e `http://localhost:5000`. Se o Live Server usar outra origem (por exemplo, `127.0.0.1`), inclua exatamente essa origem no `.env`. Acesse `frontend/index.html` pelo servidor estático. O Express não serve os arquivos do frontend.
 
 ## Rotas
 

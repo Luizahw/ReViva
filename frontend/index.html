@@ -1,27 +1,97 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#174b3a">
-  <meta name="description" content="Registre suas reciclagens e acompanhe seu impacto com o ReViva."><title>ReViva — Minhas reciclagens</title>
-  <link rel="stylesheet" href="css/style.css"><script src="js/script.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07130b">
+  <meta name="description" content="Reviva: recicle o presente, reutilize o futuro.">
+  <title>REVIVA — Recicle o presente, reutilize o futuro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/script.js" defer></script>
 </head>
 <body>
-  <header class="site-header"><a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true">↻</span> ReViva</a>
-    <nav aria-label="Navegação principal"><a href="#painel">Meu painel</a><a href="#reciclagens">Minhas reciclagens</a><a href="#catalogo">Materiais e pontos</a><button class="nav-cta" id="logoutButton" type="button" hidden>Sair</button></nav>
-  </header>
-  <main>
-    <section class="hero" id="inicio"><div class="hero-copy"><p class="eyebrow"><span></span> Informação que vira atitude</p><h1>Cada passo conta. <em>Acompanhe o seu.</em></h1><p class="hero-lead">Registre suas entregas, acompanhe os pontos gerados e encontre materiais e pontos de coleta disponíveis.</p><a class="button" href="#reciclagens">Ver minhas reciclagens <span aria-hidden="true">↓</span></a><p class="hero-note" id="welcomeText">Entre ou crie sua conta para começar.</p></div>
-      <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="leaf leaf-back"></div><div class="leaf leaf-front"></div><div class="art-center"><span>R</span><small>um ciclo<br>em movimento</small></div><span class="art-label label-one">informar</span><span class="art-label label-two">participar</span><span class="art-label label-three">acompanhar</span></div>
+  <div class="ambient-leaves" aria-hidden="true"></div>
+  <main id="app">
+    <section class="auth-screen" id="loginScreen" aria-labelledby="loginHeading">
+      <header class="brand-lockup">
+        <a class="brand brand-large" href="#inicio" aria-label="REVIVA"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M23 5 11 12l5 3-6 10 7 4 6-10 5 3zM39 17l-1-14-5 3-6-3-4 7 6 3 1 8zM22 42l13-5-1-6 6-9-7-4-6 9-6-1z"/><path class="symbol-accent" d="m27 7 4 7-4 2 4 2-1-4 5-4-7 1z"/></svg></span><span>REVIVA</span></a>
+        <p>Recicle o presente, reutilize o futuro.</p>
+      </header>
+      <form class="auth-card" id="loginForm" novalidate>
+        <div class="card-heading"><p class="kicker">Que bom ter você de volta</p><h1 id="loginHeading">Bem-vindo de volta!</h1><p>Faça login para continuar</p></div>
+        <label class="field"><span>E-mail</span><span class="input-wrap"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3-7 8-7s8 3 8 7"/></svg><input name="email" type="email" autocomplete="email" placeholder="Digite seu e-mail" required></span></label>
+        <label class="field"><span>Senha</span><span class="input-wrap"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></svg><input name="senha" type="password" autocomplete="current-password" placeholder="Digite sua senha" required><button class="visibility-toggle" type="button" aria-label="Mostrar senha" data-toggle-password><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></span></label>
+        <p class="auth-error" id="loginError" role="alert" hidden></p>
+        <button class="button button-primary button-full" type="submit">Entrar</button>
+        <p class="auth-switch">Ainda não tem uma conta? <a href="#cadastro" data-route="cadastro">Criar conta</a></p>
+      </form>
+      <footer class="auth-foot">Uma atitude de cada vez. <span>♻</span></footer>
     </section>
-    <section class="section auth-section" id="acesso"><div class="section-heading"><p class="eyebrow">Sua conta</p><h2>Acesse para acompanhar sua jornada.</h2></div><div class="auth-grid"><form class="panel auth-form" id="loginForm"><h3>Entrar</h3><label>E-mail<input name="email" type="email" autocomplete="email" required></label><label>Senha<input name="senha" type="password" autocomplete="current-password" required></label><button class="button" type="submit">Entrar</button></form><form class="panel auth-form" id="registerForm"><h3>Criar conta</h3><label>Nome<input name="nome" autocomplete="name" required maxlength="100"></label><label>E-mail<input name="email" type="email" autocomplete="email" required></label><label>Senha (mínimo 8 caracteres)<input name="senha" type="password" autocomplete="new-password" required minlength="8"></label><button class="button" type="submit">Cadastrar</button></form></div></section>
-    <section class="section dashboard" id="painel"><div class="section-heading"><p class="eyebrow">Visão geral</p><h2>Seu impacto até agora.</h2><p class="section-intro">Os indicadores são atualizados a partir dos registros e da pontuação salvos no banco.</p></div><div class="metric-grid"><article class="metric-card"><span>♧</span><strong id="scoreValue">—</strong><small>pontos acumulados</small></article><article class="metric-card"><span>↻</span><strong id="countValue">—</strong><small>reciclagens registradas</small></article><article class="metric-card"><span>♲</span><strong id="weightValue">—</strong><small>quilogramas reciclados</small></article></div></section>
-    <section class="section records" id="reciclagens"><div class="section-heading record-heading"><div><p class="eyebrow">Seu histórico</p><h2>Minhas Reciclagens</h2><p class="section-intro">Consulte, edite ou remova os registros da sua conta.</p></div><button class="button" id="newRecordButton" type="button">＋ Registrar reciclagem</button></div>
-      <p class="notice" id="feedback" role="status" aria-live="polite" hidden></p>
-      <form class="panel record-form" id="recordForm" hidden><h3 id="formTitle">Registrar reciclagem</h3><input type="hidden" name="id_reciclagem"><div class="form-grid"><label>Material<select name="id_material" required><option value="">Carregando materiais…</option></select></label><label>Quantidade em kg<input name="quantidade_kg" type="number" min="0.01" step="0.01" required></label><label>Ponto de coleta<select name="id_ponto" required><option value="">Carregando pontos…</option></select></label></div><div class="form-actions"><button class="button" type="submit" id="saveButton">Salvar reciclagem</button><button class="button secondary" id="cancelButton" type="button">Cancelar</button></div></form>
-      <div class="panel table-wrap" id="recordsContainer"><table><thead><tr><th>Material</th><th>Quantidade</th><th>Ponto de coleta</th><th>Pontos</th><th>Data</th><th>Ações</th></tr></thead><tbody id="recordsBody"></tbody></table><p class="empty-state" id="emptyState">Entre para consultar suas reciclagens.</p></div>
-      <div class="recent-block"><h3>Atividades recentes</h3><ul id="recentList" class="recent-list"><li>Entre para carregar suas atividades recentes.</li></ul></div>
+
+    <section class="auth-screen" id="registerScreen" aria-labelledby="registerHeading" hidden>
+      <header class="brand-lockup brand-compact">
+        <a class="back-link" href="#login" data-route="login" aria-label="Voltar para o login">←</a>
+        <a class="brand" href="#inicio" aria-label="REVIVA"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M23 5 11 12l5 3-6 10 7 4 6-10 5 3zM39 17l-1-14-5 3-6-3-4 7 6 3 1 8zM22 42l13-5-1-6 6-9-7-4-6 9-6-1z"/><path class="symbol-accent" d="m27 7 4 7-4 2 4 2-1-4 5-4-7 1z"/></svg></span><span>REVIVA</span></a>
+        <p>Recicle o presente, reutilize o futuro.</p>
+      </header>
+      <form class="auth-card register-card" id="registerForm" novalidate>
+        <div class="card-heading"><h1 id="registerHeading">Criar conta</h1><p>Preencha seus dados para começar sua jornada sustentável.</p></div>
+        <label class="field"><span>Nome completo</span><span class="input-wrap"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3-7 8-7s8 3 8 7"/></svg><input name="nome" autocomplete="name" maxlength="100" placeholder="Digite seu nome completo" required></span></label>
+        <label class="field"><span>E-mail</span><span class="input-wrap"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg><input name="email" type="email" autocomplete="email" placeholder="Digite seu e-mail" required></span></label>
+        <label class="field"><span>Senha</span><span class="input-wrap"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><input name="senha" type="password" autocomplete="new-password" minlength="8" placeholder="Crie uma senha segura" required><button class="visibility-toggle" type="button" aria-label="Mostrar senha" data-toggle-password><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></span></label>
+        <label class="field"><span>Confirmar senha</span><span class="input-wrap"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><input name="confirmar_senha" type="password" autocomplete="new-password" placeholder="Confirme sua senha" required><button class="visibility-toggle" type="button" aria-label="Mostrar senha" data-toggle-password><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></span></label>
+        <label class="terms"><input name="termos" type="checkbox" required><span>Concordo com o uso dos meus dados para acessar e utilizar o ReViva.</span></label>
+        <p class="auth-error" id="registerError" role="alert" hidden></p>
+        <button class="button button-primary button-full" type="submit">Criar conta</button>
+        <p class="auth-switch">Já tem uma conta? <a href="#login" data-route="login">Entrar</a></p>
+      </form>
+      <footer class="auth-foot">Uma atitude de cada vez. <span>♻</span></footer>
     </section>
-    <section class="section catalog" id="catalogo"><div class="section-heading"><p class="eyebrow">Consulte</p><h2>Materiais e pontos de coleta.</h2><p class="section-intro">Informações carregadas da API e do banco ReViva.</p></div><div class="catalog-grid"><article class="panel"><h3>Materiais recicláveis</h3><ul id="materialsList" class="catalog-list"><li>Carregando…</li></ul></article><article class="panel"><h3>Pontos de coleta</h3><ul id="pointsList" class="catalog-list"><li>Carregando…</li></ul></article></div></section>
-    <section class="closing"><span class="closing-mark" aria-hidden="true">↻</span><div><p class="eyebrow">ReViva</p><h2>Pequenos registros. Uma visão mais clara do caminho.</h2></div><a href="#inicio" aria-label="Voltar ao início">↑</a></section>
-  </main><footer><span>ReViva — Plataforma de Incentivo à Reciclagem</span><span>Atividade 3 · CRUD integrado</span></footer>
-</body></html>
+
+    <div id="memberApp" hidden>
+      <header class="app-header">
+        <a class="brand" href="#inicio" data-route="inicio"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M23 5 11 12l5 3-6 10 7 4 6-10 5 3zM39 17l-1-14-5 3-6-3-4 7 6 3 1 8zM22 42l13-5-1-6 6-9-7-4-6 9-6-1z"/><path class="symbol-accent" d="m27 7 4 7-4 2 4 2-1-4 5-4-7 1z"/></svg></span><span>REVIVA</span></a>
+        <nav class="desktop-nav" aria-label="Navegação principal"><a href="#inicio" data-route="inicio">Início</a><a href="#reciclar" data-route="reciclar">Reciclar</a><a href="#pontos" data-route="pontos">Pontos de coleta</a><a href="#historico" data-route="historico">Histórico</a><a href="#impacto" data-route="impacto">Meu impacto</a><button class="logout-button" id="logoutButton" type="button">Sair</button></nav>
+      </header>
+      <main class="member-main">
+        <section class="view" id="homeView" data-view="inicio">
+          <div class="welcome-row"><div class="avatar" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M35 9C17 8 9 18 11 34c15 3 25-6 24-25Z"/><path d="M12 37c5-10 11-15 19-21"/></svg></div><div><p class="eyebrow">BEM-VINDA À SUA JORNADA</p><h1>Olá, <span id="userName">pessoa</span> <span aria-hidden="true">👋</span></h1><p class="muted">Que bom ter você por aqui. Cada atitude faz diferença.</p></div></div>
+          <section class="points-card"><div class="points-icon" aria-hidden="true">♧</div><div class="points-copy"><small>SEUS PONTOS</small><strong id="scoreValue">—</strong><p>Continue assim e faça seu impacto crescer.</p></div><a class="points-link" href="#recompensas" data-route="recompensas"><span class="gift-icon" aria-hidden="true">♧</span><span>Recompensas<small>Em breve</small></span><b aria-hidden="true">→</b></a></section>
+          <div class="section-title-row"><div><p class="eyebrow">SUA PRÓXIMA AÇÃO</p><h2>O que você quer fazer hoje?</h2></div></div>
+          <div class="action-grid">
+            <a class="action-card" href="#reciclar" data-route="reciclar"><span class="action-icon"><svg viewBox="0 0 24 24"><path d="m8 4 2-2h4l2 2m-8 0h8M5 7h14l-1 14H6L5 7Zm4 3v7m6-7v7"/></svg></span><span class="action-text"><strong>Reciclar</strong><small>Registre uma entrega e acompanhe seus pontos.</small><b aria-hidden="true">→</b></span></a>
+            <a class="action-card" href="#recompensas" data-route="recompensas"><span class="action-icon"><svg viewBox="0 0 24 24"><path d="M20 12v9H4v-9m-2-5h20v5H2zm10 0v14M12 7H7.5a2.5 2.5 0 1 1 2.5-2.5V7Zm0 0h4.5a2.5 2.5 0 1 0-2.5-2.5V7Z"/></svg></span><span class="action-text"><strong>Minhas recompensas</strong><small>Consulte a disponibilidade do programa.</small><b aria-hidden="true">→</b></span></a>
+            <a class="action-card" href="#doar" data-route="doar"><span class="action-icon"><svg viewBox="0 0 24 24"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11A4.8 4.8 0 0 1 12 6.3a4.8 4.8 0 0 1 8.8 2.5Z"/></svg></span><span class="action-text"><strong>Doar</strong><small>Conheça o que já está disponível no ReViva.</small><b aria-hidden="true">→</b></span></a>
+            <a class="action-card" href="#impacto" data-route="impacto"><span class="action-icon"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 16V9m6 7V4m6 12v-5"/></svg></span><span class="action-text"><strong>Meu impacto</strong><small>Acompanhe seus registros e quilos reciclados.</small><b aria-hidden="true">→</b></span></a>
+          </div>
+          <a class="collection-promo" href="#pontos" data-route="pontos"><span class="promo-icon" aria-hidden="true">⌖</span><span><small>ENCONTRE UM DESTINO</small><strong>Veja os pontos de coleta</strong><span class="promo-copy">Confira endereços próximos e escolha onde levar seus materiais.</span></span><b aria-hidden="true">→</b></a>
+          <div class="future-banner"><span class="banner-leaf" aria-hidden="true">♧</span><p><strong>Juntos por um futuro melhor!</strong><br>Cada atitude conta. Recicle, doe e faça a diferença.</p><span class="banner-world" aria-hidden="true">◉</span></div>
+        </section>
+
+        <section class="view" id="recycleView" data-view="reciclar" hidden>
+          <div class="page-heading"><p class="eyebrow">REGISTRO DE RECICLAGEM</p><h1>Recicle com propósito.</h1><p class="muted">Registre uma entrega para acompanhar os pontos que você gerou.</p></div>
+          <form class="content-card recycle-form" id="recordForm" novalidate><div class="card-heading left"><span class="step-badge">01</span><div><h2 id="formTitle">Registrar reciclagem</h2><p>Os pontos são calculados pelo sistema após salvar.</p></div></div><input type="hidden" name="id_reciclagem"><div class="form-grid"><label class="field"><span>Material</span><select name="id_material" required><option value="">Carregando materiais…</option></select></label><label class="field"><span>Quantidade em kg</span><input name="quantidade_kg" type="number" min="0.01" step="0.01" placeholder="Ex.: 2,5" required></label><label class="field field-wide"><span>Ponto de coleta</span><select name="id_ponto" required><option value="">Carregando pontos…</option></select></label></div><p class="form-feedback" id="recordFeedback" role="status" aria-live="polite" hidden></p><div class="form-actions"><button class="button button-primary" id="saveButton" type="submit">Salvar registro</button><button class="button button-quiet" id="cancelButton" type="button">Cancelar</button></div></form>
+          <div class="inline-link-card"><span class="action-icon">⌖</span><p>Não sabe onde levar? <a href="#pontos" data-route="pontos">Encontre um ponto de coleta</a></p></div>
+        </section>
+
+        <section class="view" id="pointsView" data-view="pontos" hidden><div class="page-heading"><p class="eyebrow">DESCARTE RESPONSÁVEL</p><h1>Pontos de coleta</h1><p class="muted">Ache lixeiras perto de você. Os endereços abaixo vêm do cadastro do ReViva.</p></div><p class="page-feedback" id="pointsFeedback" role="status" hidden></p><div class="points-grid" id="pointsList" aria-live="polite"><div class="loading-card">Carregando pontos de coleta…</div></div><div class="info-note"><span aria-hidden="true">⌖</span><p>As localizações abrem no Google Maps a partir do endereço cadastrado. O ReViva não armazena coordenadas geográficas.</p></div></section>
+
+        <section class="view" id="historyView" data-view="historico" hidden><div class="page-heading"><p class="eyebrow">SEU CAMINHO ATÉ AQUI</p><h1>Meu histórico</h1><p class="muted">Todas as reciclagens registradas na sua conta.</p><a class="button button-primary" href="#reciclar" data-route="reciclar">＋ Registrar reciclagem</a></div><p class="form-feedback" id="historyFeedback" role="status" aria-live="polite" hidden></p><div class="history-summary"><article><small>RECICLAGENS</small><strong id="countValue">—</strong></article><article><small>QUILOS RECICLADOS</small><strong id="weightValue">—</strong></article><article><small>PONTOS ACUMULADOS</small><strong id="historyScore">—</strong></article></div><div class="history-list" id="recordsList"><div class="loading-card">Entre para carregar seu histórico.</div></div></section>
+
+        <section class="view" id="impactView" data-view="impacto" hidden><div class="page-heading"><p class="eyebrow">SEU IMPACTO</p><h1>Pequenos passos, diferença real.</h1><p class="muted">Indicadores calculados a partir das suas reciclagens salvas no banco.</p></div><div class="impact-grid"><article class="impact-card impact-highlight"><span aria-hidden="true">♧</span><small>PONTOS ACUMULADOS</small><strong id="impactScore">—</strong><p>O saldo atual da sua conta.</p></article><article class="impact-card"><span aria-hidden="true">↻</span><small>RECICLAGENS REGISTRADAS</small><strong id="impactCount">—</strong><p>Entregas que você registrou no ReViva.</p></article><article class="impact-card"><span aria-hidden="true">♲</span><small>QUILOS RECICLADOS</small><strong id="impactWeight">—</strong><p>Peso somado dos seus registros.</p></article></div><h2 class="subheading">Atividades recentes</h2><ul class="recent-list" id="recentList"><li>Carregando atividades…</li></ul></section>
+
+        <section class="view" id="rewardsView" data-view="recompensas" hidden><div class="feature-empty"><span class="feature-icon" aria-hidden="true">♧</span><p class="eyebrow">RECOMPENSAS</p><h1>Uma ideia para o futuro.</h1><p>O projeto ainda não tem uma API ou catálogo de recompensas. Seus pontos ficam registrados no seu perfil e podem ser consultados no painel.</p><a class="button button-primary" href="#impacto" data-route="impacto">Ver meu impacto</a></div></section>
+
+        <section class="view" id="donateView" data-view="doar" hidden><div class="feature-empty"><span class="feature-icon" aria-hidden="true">♡</span><p class="eyebrow">DOAÇÕES</p><h1>Compartilhar também transforma.</h1><p>O projeto ainda não tem uma API de doações. Esta seção informa a limitação atual e não registra ou anuncia doações fictícias.</p><a class="button button-primary" href="#pontos" data-route="pontos">Ver pontos de coleta</a></div></section>
+
+        <section class="view" id="profileView" data-view="perfil" hidden><div class="page-heading"><p class="eyebrow">SUA CONTA</p><h1>Meu perfil</h1><p class="muted">Informações retornadas pela API de autenticação.</p></div><div class="content-card profile-card"><div class="avatar avatar-large" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M35 9C17 8 9 18 11 34c15 3 25-6 24-25Z"/><path d="M12 37c5-10 11-15 19-21"/></svg></div><dl><div><dt>Nome</dt><dd id="profileName">—</dd></div><div><dt>E-mail</dt><dd id="profileEmail">—</dd></div><div><dt>Tipo de conta</dt><dd id="profileType">—</dd></div><div><dt>Membro desde</dt><dd id="profileDate">—</dd></div></dl><button class="button button-quiet" id="profileLogout" type="button">Sair da conta</button></div></section>
+      </main>
+      <nav class="mobile-nav" aria-label="Navegação móvel"><a href="#inicio" data-route="inicio"><span>⌂</span><small>Início</small></a><a href="#historico" data-route="historico"><span>◷</span><small>Histórico</small></a><a class="mobile-add" href="#reciclar" data-route="reciclar" aria-label="Registrar reciclagem"><span>＋</span></a><a href="#doar" data-route="doar"><span>♡</span><small>Doações</small></a><a href="#perfil" data-route="perfil"><span>♙</span><small>Perfil</small></a></nav>
+      <footer class="app-footer"><span>REVIVA</span><span>Recicle o presente, reutilize o futuro.</span></footer>
+    </div>
+  </main>
+</body>
+</html>
