@@ -6,6 +6,7 @@ const api = process.env.API_URL || 'http://localhost:3300/api';
 const identificador = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
 const emails = ['a', 'b', 'admin'].map((parte) => `reviva.entrega3.${parte}.${identificador}@example.test`);
 const idsCriados = [];
+let bancoDisponivel = false;
 async function request(path, { method = 'GET', token, body } = {}) {
   const response = await fetch(`${api}${path}`, { method, headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
   return { status: response.status, data: await response.json() };
@@ -23,6 +24,7 @@ async function criarConta(email) {
 try {
   const [materiais] = await pool.execute('SELECT id_material, pontos_por_kg FROM materiais ORDER BY id_material LIMIT 1');
   const [pontos] = await pool.execute('SELECT id_ponto FROM pontos_coleta ORDER BY id_ponto LIMIT 1');
+  bancoDisponivel = true;
   assert.ok(materiais.length && pontos.length, 'Execute sql/schema.sql para ter materiais e pontos de teste.');
   const comumA = await criarConta(emails[0]);
   const comumB = await criarConta(emails[1]);
@@ -30,8 +32,27 @@ try {
   assert.equal(perfilNovo.usuario.tipo_usuario, 'comum', 'cadastro público não concede papel de administrador');
   await espera(403, '/usuarios/admin', { token: comumA });
   const administrador = await criarConta(emails[2]);
+  const [[adminsAnteriores]] = await pool.execute("SELECT COUNT(*) AS total FROM usuarios WHERE tipo_usuario = 'administrador'");
   await pool.execute("UPDATE usuarios SET tipo_usuario = 'administrador' WHERE email = ?", [emails[2]]);
   const tokenAdmin = (await espera(200, '/usuarios/login', { method: 'POST', body: { email: emails[2], senha: 'Entrega3#Teste' } })).token;
+  const listaAdmin = await espera(200, '/usuarios', { token: tokenAdmin });
+  assert.ok(Array.isArray(listaAdmin.usuarios), 'admin lista usuários');
+  assert.ok(listaAdmin.usuarios.every((usuario) => !Object.hasOwn(usuario, 'senha')), 'listagem nunca inclui senha');
+  await espera(403, '/usuarios', { token: comumA });
+  await espera(403, `/usuarios/${perfilNovo.usuario.id_usuario}/tipo`, { method: 'PATCH', token: comumA, body: { tipo_usuario: 'administrador' } });
+  await espera(403, `/usuarios/${perfilNovo.usuario.id_usuario}/tipo`, { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'comum' } });
+  await espera(400, '/usuarios/invalido/tipo', { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'comum' } });
+  await espera(400, `/usuarios/${perfilNovo.usuario.id_usuario}/tipo`, { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'superadmin' } });
+  await espera(404, '/usuarios/2147483647/tipo', { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'comum' } });
+  const idUsuarioB = (await espera(200, '/usuarios/me', { token: comumB })).usuario.id_usuario;
+  await espera(200, `/usuarios/${idUsuarioB}/tipo`, { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'administrador' } });
+  const [[usuarioPromovido]] = await pool.execute('SELECT tipo_usuario FROM usuarios WHERE id_usuario = ?', [idUsuarioB]);
+  assert.equal(usuarioPromovido.tipo_usuario, 'administrador', 'promoção persistida no MySQL');
+  await espera(200, '/usuarios', { token: comumB }); // Papel atualizado no banco já vale mesmo com JWT antigo.
+  await espera(200, `/usuarios/${idUsuarioB}/tipo`, { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'comum' } });
+  const [[usuarioRebaixado]] = await pool.execute('SELECT tipo_usuario FROM usuarios WHERE id_usuario = ?', [idUsuarioB]);
+  assert.equal(usuarioRebaixado.tipo_usuario, 'comum', 'rebaixamento persistido no MySQL');
+  await espera(403, '/usuarios', { token: comumB });
   const materialId = materiais[0].id_material; const pontoId = pontos[0].id_ponto;
   const payload = { id_material: materialId, id_ponto: pontoId, quantidade_kg: 1.25 };
 
@@ -81,14 +102,28 @@ try {
   await espera(404, `/reciclagens/${criado.id_reciclagem}`, { token: comumA });
   await espera(404, `/reciclagens/99999999`, { method: 'DELETE', token: comumA });
   await espera(200, '/materiais'); await espera(200, '/pontos');
+  if (Number(adminsAnteriores.total) === 0) {
+    const idUsuarioA = perfilNovo.usuario.id_usuario;
+    await espera(200, `/usuarios/${idUsuarioB}/tipo`, { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'administrador' } });
+    const tentativasConcorrentes = await Promise.all([
+      request(`/usuarios/${idUsuarioB}/tipo`, { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'comum' } }),
+      request(`/usuarios/${idUsuarioA}/tipo`, { method: 'PATCH', token: comumB, body: { tipo_usuario: 'comum' } })
+    ]);
+    assert.ok(tentativasConcorrentes.some((resultado) => resultado.status === 200), 'uma alteração concorrente deve ser aceita');
+    assert.ok(tentativasConcorrentes.every((resultado) => [200, 403, 409].includes(resultado.status)), 'a tentativa concorrente deve ser autorizada ou recusada com segurança');
+    const [[adminsRestantes]] = await pool.execute("SELECT COUNT(*) AS total FROM usuarios WHERE tipo_usuario = 'administrador'");
+    assert.equal(Number(adminsRestantes.total), 1, 'concorrência não rebaixa o último administrador');
+  }
   console.log('OK: autenticação, validações, CRUD, propriedade, administrador e pontuação.');
 } finally {
-  const [usuarios] = await pool.execute('SELECT id_usuario FROM usuarios WHERE email IN (?, ?, ?)', emails);
-  const idsUsuarios = usuarios.map((usuario) => usuario.id_usuario);
-  if (idsUsuarios.length) {
-    const placeholders = idsUsuarios.map(() => '?').join(',');
-    await pool.execute(`DELETE FROM reciclagens WHERE id_usuario IN (${placeholders})`, idsUsuarios);
-    await pool.execute(`DELETE FROM usuarios WHERE id_usuario IN (${placeholders})`, idsUsuarios);
+  if (bancoDisponivel) {
+    const [usuarios] = await pool.execute('SELECT id_usuario FROM usuarios WHERE email IN (?, ?, ?)', emails);
+    const idsUsuarios = usuarios.map((usuario) => usuario.id_usuario);
+    if (idsUsuarios.length) {
+      const placeholders = idsUsuarios.map(() => '?').join(',');
+      await pool.execute(`DELETE FROM reciclagens WHERE id_usuario IN (${placeholders})`, idsUsuarios);
+      await pool.execute(`DELETE FROM usuarios WHERE id_usuario IN (${placeholders})`, idsUsuarios);
+    }
   }
   await pool.end();
 }

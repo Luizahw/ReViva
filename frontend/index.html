@@ -54,7 +54,7 @@
     <div id="memberApp" hidden>
       <header class="app-header">
         <a class="brand" href="#inicio" data-route="inicio"><span class="brand-symbol" aria-hidden="true"><img src="assets/recycle-mark.svg" alt=""></span><span>REVIVA</span></a>
-        <nav class="desktop-nav" aria-label="Navegação principal"><a href="#inicio" data-route="inicio">Início</a><a href="#reciclar" data-route="reciclar">Reciclar</a><a href="#pontos" data-route="pontos">Pontos de coleta</a><a href="#historico" data-route="historico">Histórico</a><a href="#impacto" data-route="impacto">Meu impacto</a><button class="logout-button" id="logoutButton" type="button">Sair</button></nav>
+        <nav class="desktop-nav" aria-label="Navegação principal"><a href="#inicio" data-route="inicio">Início</a><a href="#reciclar" data-route="reciclar">Reciclar</a><a href="#pontos" data-route="pontos">Pontos de coleta</a><a href="#historico" data-route="historico">Histórico</a><a href="#impacto" data-route="impacto">Meu impacto</a><a href="#configuracoes" data-route="configuracoes" id="adminSettingsLink" hidden>Configurações</a><button class="logout-button" id="logoutButton" type="button">Sair</button></nav>
       </header>
       <main class="member-main">
         <section class="view" id="homeView" data-view="inicio">
@@ -88,6 +88,13 @@
         <section class="view" id="donateView" data-view="doar" hidden><div class="feature-empty"><span class="feature-icon" aria-hidden="true">♡</span><p class="eyebrow">DOAÇÕES</p><h1>Compartilhar também transforma.</h1><p>O projeto ainda não tem uma API de doações. Esta seção informa a limitação atual e não registra ou anuncia doações fictícias.</p><a class="button button-primary" href="#pontos" data-route="pontos">Ver pontos de coleta</a></div></section>
 
         <section class="view" id="profileView" data-view="perfil" hidden><div class="page-heading"><p class="eyebrow">SUA CONTA</p><h1>Meu perfil</h1><p class="muted">Informações retornadas pela API de autenticação.</p></div><div class="content-card profile-card"><div class="avatar avatar-large" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M35 9C17 8 9 18 11 34c15 3 25-6 24-25Z"/><path d="M12 37c5-10 11-15 19-21"/></svg></div><dl><div><dt>Nome</dt><dd id="profileName">—</dd></div><div><dt>E-mail</dt><dd id="profileEmail">—</dd></div><div><dt>Tipo de conta</dt><dd id="profileType">—</dd></div><div><dt>Membro desde</dt><dd id="profileDate">—</dd></div></dl><button class="button button-quiet" id="profileLogout" type="button">Sair da conta</button></div></section>
+        <section class="view" id="settingsView" data-view="configuracoes" hidden>
+          <div class="page-heading"><p class="eyebrow">ADMINISTRAÇÃO</p><h1>Configurações</h1><p class="muted">Gerencie os níveis de acesso das contas do ReViva.</p></div>
+          <section class="content-card users-card"><div class="card-heading left"><span class="step-badge" aria-hidden="true">⚙</span><div><h2>Gerenciar usuários</h2><p>As alterações são aplicadas pelo servidor. A conta afetada precisa entrar novamente.</p></div></div>
+            <p class="form-feedback" id="usersFeedback" role="status" aria-live="polite" hidden></p>
+            <div class="users-table-wrap"><table class="users-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Nível atual</th><th>Pontuação</th><th>Cadastro</th><th>Alteração de acesso</th></tr></thead><tbody id="usersTableBody"><tr><td colspan="6">Carregando usuários…</td></tr></tbody></table></div>
+          </section>
+        </section>
       </main>
       <nav class="mobile-nav" aria-label="Navegação móvel"><a href="#inicio" data-route="inicio"><span>⌂</span><small>Início</small></a><a href="#historico" data-route="historico"><span>◷</span><small>Histórico</small></a><a class="mobile-add" href="#reciclar" data-route="reciclar" aria-label="Registrar reciclagem"><span>＋</span></a><a href="#doar" data-route="doar"><span>♡</span><small>Doações</small></a><a href="#perfil" data-route="perfil"><span>♙</span><small>Perfil</small></a></nav>
       <footer class="app-footer"><span>REVIVA</span><span>Recicle o presente, reutilize o futuro.</span></footer>

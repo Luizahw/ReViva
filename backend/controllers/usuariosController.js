@@ -88,4 +88,48 @@ async function listarUsuarios(req, res, next) {
   }
 }
 
-export { cadastrar, login, perfil, listarUsuarios };
+async function atualizarTipoUsuario(req, res, next) {
+  const idInformado = req.params.id;
+  const idUsuario = Number(idInformado);
+  const { tipo_usuario: tipoUsuario } = req.body || {};
+  if (!/^[1-9]\d*$/.test(idInformado) || !Number.isSafeInteger(idUsuario)) {
+    return res.status(400).json({ mensagem: 'ID de usuário inválido.' });
+  }
+  if (!['comum', 'administrador'].includes(tipoUsuario)) {
+    return res.status(400).json({ mensagem: 'Tipo de usuário inválido. Use comum ou administrador.' });
+  }
+  if (idUsuario === req.usuario.id_usuario) {
+    return res.status(403).json({ mensagem: 'Não é permitido alterar o próprio nível de acesso.' });
+  }
+
+  let conexao;
+  try {
+    conexao = await pool.getConnection();
+    await conexao.beginTransaction();
+    const [administradores] = await conexao.execute(
+      "SELECT id_usuario FROM usuarios WHERE tipo_usuario = 'administrador' FOR UPDATE"
+    );
+    const [alvos] = await conexao.execute(
+      'SELECT id_usuario, tipo_usuario FROM usuarios WHERE id_usuario = ? FOR UPDATE',
+      [idUsuario]
+    );
+    if (!alvos.length) {
+      await conexao.rollback();
+      return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+    }
+    if (alvos[0].tipo_usuario === 'administrador' && tipoUsuario === 'comum' && administradores.length <= 1) {
+      await conexao.rollback();
+      return res.status(409).json({ mensagem: 'Não é possível rebaixar o último administrador.' });
+    }
+    await conexao.execute('UPDATE usuarios SET tipo_usuario = ? WHERE id_usuario = ?', [tipoUsuario, idUsuario]);
+    await conexao.commit();
+    return res.status(200).json({ mensagem: 'Nível de acesso atualizado. O usuário afetado deve entrar novamente.', usuario: { id_usuario: idUsuario, tipo_usuario: tipoUsuario } });
+  } catch (error) {
+    if (conexao) await conexao.rollback();
+    return next(error);
+  } finally {
+    if (conexao) conexao.release();
+  }
+}
+
+export { cadastrar, login, perfil, listarUsuarios, atualizarTipoUsuario };

@@ -79,6 +79,8 @@ async function loadProfile() {
   $('#profileEmail').textContent = data.usuario.email;
   $('#profileType').textContent = data.usuario.tipo_usuario === 'administrador' ? 'Administrador' : 'Pessoa usuária';
   $('#profileDate').textContent = formatDate(data.usuario.data_cadastro);
+  $('#adminSettingsLink').hidden = data.usuario.tipo_usuario !== 'administrador';
+  $('#adminSettingsMobile').hidden = data.usuario.tipo_usuario !== 'administrador';
   return data.usuario;
 }
 
@@ -229,23 +231,93 @@ async function deleteRecord(id) {
   }
 }
 
+function renderUsers(users) {
+  const body = $('#usersTableBody');
+  body.replaceChildren();
+  if (!users.length) {
+    const row = document.createElement('tr');
+    const cell = htmlElement('td', 'users-empty', 'Nenhum usuário cadastrado.');
+    cell.colSpan = 6;
+    row.append(cell);
+    body.append(row);
+    return;
+  }
+  users.forEach((user) => {
+    const row = document.createElement('tr');
+    [user.nome, user.email, user.tipo_usuario === 'administrador' ? 'Administrador' : 'Usuário comum', formatNumber(user.pontos), formatDate(user.data_cadastro)].forEach((value) => row.append(htmlElement('td', '', value)));
+    const actionCell = document.createElement('td');
+    const select = document.createElement('select');
+    select.className = 'user-role-select';
+    select.setAttribute('aria-label', `Nível de acesso de ${user.nome}`);
+    select.dataset.userId = user.id_usuario;
+    select.dataset.currentRole = user.tipo_usuario;
+    select.add(new Option('Usuário comum', 'comum'));
+    select.add(new Option('Administrador', 'administrador'));
+    select.value = user.tipo_usuario;
+    if (Number(user.id_usuario) === Number(readUser()?.id_usuario)) {
+      select.disabled = true;
+      select.title = 'Não é permitido alterar o próprio nível de acesso.';
+    }
+    actionCell.append(select);
+    row.append(actionCell);
+    body.append(row);
+  });
+}
+
+async function loadUsers() {
+  const data = await api('/usuarios');
+  renderUsers(data.usuarios);
+}
+
+async function updateUserRole(select) {
+  const previousRole = select.dataset.currentRole;
+  const newRole = select.value;
+  if (newRole === previousRole) return;
+  const roleName = newRole === 'administrador' ? 'administrador' : 'usuário comum';
+  if (!window.confirm(`Confirma alterar o nível desta conta para ${roleName}? O usuário deverá entrar novamente para aplicar as novas permissões.`)) {
+    select.value = previousRole;
+    return;
+  }
+  select.disabled = true;
+  try {
+    const result = await api(`/usuarios/${encodeURIComponent(select.dataset.userId)}/tipo`, {
+      method: 'PATCH', body: JSON.stringify({ tipo_usuario: newRole })
+    });
+    message($('#usersFeedback'), result.mensagem, 'success');
+    await loadUsers();
+  } catch (error) {
+    select.value = previousRole;
+    select.disabled = false;
+    message($('#usersFeedback'), error.message, 'error');
+  }
+}
+
 async function navigate(route) {
-  const validRoutes = ['inicio', 'reciclar', 'pontos', 'historico', 'impacto', 'recompensas', 'doar', 'perfil'];
+  const validRoutes = ['inicio', 'reciclar', 'pontos', 'historico', 'impacto', 'recompensas', 'doar', 'perfil', 'configuracoes'];
   if (!activeToken()) {
     if (route === 'cadastro') { showRegistration(); return; }
     showLogin();
     return;
   }
   if (route === 'login' || route === 'cadastro' || !validRoutes.includes(route)) route = 'inicio';
-  showMember(route);
+  showMember(route === 'configuracoes' ? 'inicio' : route);
   try {
-    if (route === 'inicio' || route === 'perfil') await loadProfile();
+    if (route === 'inicio' || route === 'perfil' || route === 'configuracoes') await loadProfile();
+    if (route === 'configuracoes') {
+      await loadUsers();
+      showMember('configuracoes');
+    }
     if (['inicio', 'historico', 'impacto'].includes(route)) await loadSummary();
     if (route === 'historico') await loadHistory();
     if (route === 'pontos') await loadPoints();
     if (route === 'reciclar') await loadMaterialsAndPoints();
   } catch (error) {
-    if (activeToken()) window.alert(error.message);
+    if (route === 'configuracoes') {
+      if (!activeToken()) return;
+      showMember('inicio');
+      if (location.hash !== '#inicio') history.replaceState(null, '', '#inicio');
+      window.alert(error.message);
+    } else if (activeToken()) window.alert(error.message);
   }
 }
 
@@ -368,6 +440,9 @@ document.addEventListener('click', (event) => {
     input.type = show ? 'text' : 'password';
     toggle.setAttribute('aria-label', show ? 'Ocultar senha' : 'Mostrar senha');
   }
+});
+document.addEventListener('change', (event) => {
+  if (event.target.matches('.user-role-select')) updateUserRole(event.target);
 });
 window.addEventListener('hashchange', routeFromHash);
 

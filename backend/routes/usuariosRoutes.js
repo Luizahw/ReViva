@@ -1,10 +1,11 @@
 import express from 'express';
-import { cadastrar, login, perfil, listarUsuarios } from '../controllers/usuariosController.js';
+import { cadastrar, login, perfil, listarUsuarios, atualizarTipoUsuario } from '../controllers/usuariosController.js';
 import { autenticar, exigirAdministrador } from '../middlewares/usuariosMiddleware.js';
 
 const router = express.Router();
 
 router.get('/', autenticar, exigirAdministrador, listarUsuarios);
+router.patch('/:id/tipo', autenticar, exigirAdministrador, atualizarTipoUsuario);
 router.post('/cadastro', cadastrar);
 router.post('/login', login);
 router.get('/perfil', autenticar, perfil);

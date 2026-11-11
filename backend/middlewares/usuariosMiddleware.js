@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { pool } from '../database/conexao.js';
 
 function autenticar(req, res, next) {
   const authorization = req.headers.authorization;
@@ -21,12 +22,24 @@ function autenticar(req, res, next) {
   }
 }
 
-function exigirAdministrador(req, res, next) {
+async function exigirAdministrador(req, res, next) {
   if (!req.usuario) return res.status(401).json({ mensagem: 'Autenticação necessária.' });
-  if (req.usuario.tipo_usuario !== 'administrador') {
-    return res.status(403).json({ mensagem: 'Acesso permitido somente a administradores.' });
+  try {
+    // O papel é consultado no banco a cada requisição administrativa. Assim, um
+    // JWT emitido antes de um rebaixamento não mantém privilégios antigos.
+    const [usuarios] = await pool.execute(
+      'SELECT tipo_usuario FROM usuarios WHERE id_usuario = ? LIMIT 1',
+      [req.usuario.id_usuario]
+    );
+    if (!usuarios.length) return res.status(401).json({ mensagem: 'Usuário não encontrado.' });
+    req.usuario.tipo_usuario = usuarios[0].tipo_usuario;
+    if (req.usuario.tipo_usuario !== 'administrador') {
+      return res.status(403).json({ mensagem: 'Acesso permitido somente a administradores.' });
+    }
+    return next();
+  } catch (error) {
+    return next(error);
   }
-  return next();
 }
 
 export { autenticar, exigirAdministrador };

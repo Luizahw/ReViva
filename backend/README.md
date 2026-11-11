@@ -17,6 +17,8 @@ A API usa `PORT` quando definido, com padrão `3300`. O CORS aceita uma lista de
 | GET | `/api/health` | Público |
 | POST | `/api/usuarios/cadastro` | Público; sempre cria usuário comum |
 | POST | `/api/usuarios/login` | Público |
+| GET | `/api/usuarios` | Administrador; lista usuários sem senha |
+| PATCH | `/api/usuarios/:id/tipo` | Administrador; altera para `comum` ou `administrador` |
 | GET | `/api/usuarios/me` | JWT válido |
 | GET | `/api/usuarios/admin` | Administrador |
 | GET | `/api/materiais` | Público; catálogo do MySQL |
@@ -38,4 +40,10 @@ O backend calcula `Math.round(quantidade_kg * pontos_por_kg)` com o valor de `ma
 
 Cadastre duas contas em `/api/usuarios/cadastro`, faça login e copie os tokens. Use o token de usuário comum para POST/GET/PUT/DELETE. Crie um registro de teste usando um `id_material` e `id_ponto` obtidos nos endpoints de catálogo. Teste a edição com quantidade/material diferentes e confira o saldo em `/api/usuarios/me`. Registre também uma reciclagem com a outra conta e tente consultar/editar/excluir seu ID usando o primeiro token (esperado `403`). Sem token, operações de reciclagem devem responder `401`. Por fim, use um token de administrador para conferir a listagem global. Para promover uma conta de demonstração, atualize `tipo_usuario` diretamente no banco em ambiente local; o cadastro público ignora qualquer campo de perfil enviado.
 
-O roteiro automatizado cobre esses fluxos usando três contas temporárias e remove as contas ao terminar. Com a API em execução e banco de teste preparado, use `npm run test:integration` em `backend`. Se a API estiver em outra porta, defina `API_URL`, por exemplo `http://localhost:3301/api`.
+Para criar o primeiro administrador em desenvolvimento, cadastre a conta normalmente e execute no MySQL, usando o e-mail da conta:
+
+```sql
+UPDATE usuarios SET tipo_usuario = 'administrador' WHERE email = 'admin@exemplo.com';
+```
+
+O roteiro automatizado cobre o CRUD usando três contas temporárias e remove as contas ao terminar. Com a API em execução e banco de teste preparado, use `npm run test:integration` em `backend`. Se a API estiver em outra porta, defina `API_URL`, por exemplo `http://localhost:3301/api`.
