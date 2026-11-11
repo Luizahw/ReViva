@@ -158,9 +158,12 @@ try {
     const [usuarios] = await pool.execute('SELECT id_usuario FROM usuarios WHERE email IN (?, ?, ?)', emails);
     const idsUsuarios = usuarios.map((usuario) => usuario.id_usuario);
     if (doacoesCriadas.length) await pool.execute(`DELETE FROM doacoes WHERE id_doacao IN (${doacoesCriadas.map(() => '?').join(',')})`, doacoesCriadas);
-    if (idsUsuarios.length) await pool.execute(`DELETE FROM resgates WHERE id_usuario IN (${idsUsuarios.map(() => '?').join(',')})`, idsUsuarios);
     if (idsUsuarios.length) {
       const placeholders = idsUsuarios.map(() => '?').join(',');
+      const [tabelaResgates] = await pool.execute("SHOW TABLES LIKE 'resgates'");
+      if (tabelaResgates.length) await pool.execute(`DELETE FROM resgates WHERE id_usuario IN (${placeholders})`, idsUsuarios);
+      const [tabelaConquistas] = await pool.execute("SHOW TABLES LIKE 'usuarios_conquistas'");
+      if (tabelaConquistas.length) await pool.execute(`DELETE FROM usuarios_conquistas WHERE id_usuario IN (${placeholders})`, idsUsuarios);
       await pool.execute(`DELETE FROM reciclagens WHERE id_usuario IN (${placeholders})`, idsUsuarios);
       await pool.execute(`DELETE FROM usuarios WHERE id_usuario IN (${placeholders})`, idsUsuarios);
     }
