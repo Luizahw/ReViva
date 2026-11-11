@@ -6,6 +6,8 @@ const api = process.env.API_URL || 'http://localhost:3300/api';
 const identificador = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
 const emails = ['a', 'b', 'admin'].map((parte) => `reviva.entrega3.${parte}.${identificador}@example.test`);
 const idsCriados = [];
+const recursosCriados = { recompensas: [], materiais: [], pontos: [] };
+const doacoesCriadas = [];
 let bancoDisponivel = false;
 async function request(path, { method = 'GET', token, body } = {}) {
   const response = await fetch(`${api}${path}`, { method, headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
@@ -35,6 +37,14 @@ try {
   const [[adminsAnteriores]] = await pool.execute("SELECT COUNT(*) AS total FROM usuarios WHERE tipo_usuario = 'administrador'");
   await pool.execute("UPDATE usuarios SET tipo_usuario = 'administrador' WHERE email = ?", [emails[2]]);
   const tokenAdmin = (await espera(200, '/usuarios/login', { method: 'POST', body: { email: emails[2], senha: 'Entrega3#Teste' } })).token;
+  await espera(403, '/admin/indicadores', { token: comumA });
+  await espera(200, '/admin/indicadores', { token: tokenAdmin });
+  const jornadaInicial = await espera(200, '/jornada', { token: comumA });
+  assert.ok(jornadaInicial.jornada.niveis.length, 'níveis vêm da migração');
+  for (const periodo of ['semanal', 'mensal', 'geral']) {
+    const ranking = await espera(200, `/jornada/ranking?periodo=${periodo}`, { token: comumA });
+    assert.ok(ranking.ranking.every((item) => !Object.hasOwn(item, 'email') && !Object.hasOwn(item, 'id_usuario')), 'ranking não expõe dados privados');
+  }
   const listaAdmin = await espera(200, '/usuarios', { token: tokenAdmin });
   assert.ok(Array.isArray(listaAdmin.usuarios), 'admin lista usuários');
   assert.ok(listaAdmin.usuarios.every((usuario) => !Object.hasOwn(usuario, 'senha')), 'listagem nunca inclui senha');
@@ -71,6 +81,34 @@ try {
   idsCriados.push(criado.id_reciclagem);
   const pontosIniciais = Math.round(1.25 * Number(materiais[0].pontos_por_kg));
   assert.equal(Number(criado.pontos_gerados), pontosIniciais, 'pontos do cadastro');
+  const jornadaComConquista = await espera(200, '/jornada', { token: comumA });
+  assert.ok(jornadaComConquista.jornada.conquistas.some((item) => item.codigo === 'primeira_reciclagem' && item.desbloqueada_em), 'primeira reciclagem desbloqueada e persistida');
+  const recompensa = await espera(201, '/admin/recompensas', { method: 'POST', token: tokenAdmin, body: { nome: `Recompensa teste ${identificador}`, descricao: 'Benefício temporário de integração.', parceiro: 'Parceiro de teste', pontos_necessarios: 1, quantidade: 1, ativa: true } });
+  recursosCriados.recompensas.push(recompensa.id_recompensa);
+  assert.ok((await espera(200, '/recompensas', { token: comumA })).recompensas.some((item) => Number(item.id_recompensa) === Number(recompensa.id_recompensa)), 'catálogo usa recompensa persistida');
+  const saldoAntesResgate = (await espera(200, '/usuarios/me', { token: comumA })).usuario.pontos;
+  const resgate = await espera(201, `/recompensas/${recompensa.id_recompensa}/resgatar`, { method: 'POST', token: comumA, body: {} });
+  const [[saldoDepoisResgate]] = await pool.execute('SELECT pontos FROM usuarios WHERE id_usuario = ?', [perfilNovo.usuario.id_usuario]);
+  assert.equal(Number(saldoDepoisResgate.pontos), Number(saldoAntesResgate) - 1, 'resgate desconta saldo no MySQL');
+  await espera(409, `/recompensas/${recompensa.id_recompensa}/resgatar`, { method: 'POST', token: comumA, body: {} });
+  await espera(200, `/admin/resgates/${resgate.resgate.id_resgate}/status`, { method: 'PATCH', token: tokenAdmin, body: { status: 'cancelado' } });
+  const [[saldoRestaurado]] = await pool.execute('SELECT pontos FROM usuarios WHERE id_usuario = ?', [perfilNovo.usuario.id_usuario]);
+  assert.equal(Number(saldoRestaurado.pontos), Number(saldoAntesResgate), 'cancelamento restaura pontos no MySQL');
+  const doacao = await espera(201, '/doacoes', { method: 'POST', token: comumA, body: { equipamento: 'Notebook de teste', categoria: 'informática', descricao: 'Cadastro temporário de integração.', estado_conservacao: 'bom', cidade: 'Cidade de teste', contato_nome: 'Pessoa teste', contato_email: emails[0] } });
+  doacoesCriadas.push(doacao.id_doacao);
+  assert.equal((await espera(200, '/doacoes', { token: comumA })).doacoes[0].status, 'pendente', 'doação inicia pendente');
+  await espera(200, `/admin/doacoes/${doacao.id_doacao}/status`, { method: 'PATCH', token: tokenAdmin, body: { status: 'aprovada', observacao_admin: 'Teste de revisão.' } });
+  assert.equal((await espera(200, '/doacoes', { token: comumA })).doacoes[0].status, 'aprovada', 'status de doação persistido e visível ao autor');
+  const materialExtra = await espera(201, '/admin/materiais', { method: 'POST', token: tokenAdmin, body: { nome: `Material teste ${identificador}`, descricao: 'Temporário', pontos_por_kg: 2 } });
+  recursosCriados.materiais.push(materialExtra.id_material);
+  await espera(200, `/admin/materiais/${materialExtra.id_material}`, { method: 'PUT', token: tokenAdmin, body: { nome: `Material teste ${identificador}`, descricao: 'Atualizado', pontos_por_kg: 3 } });
+  await espera(200, `/admin/materiais/${materialExtra.id_material}`, { method: 'DELETE', token: tokenAdmin });
+  recursosCriados.materiais.pop();
+  const pontoExtra = await espera(201, '/admin/pontos', { method: 'POST', token: tokenAdmin, body: { nome: `Ponto teste ${identificador}`, endereco: 'Rua de teste, 1', cidade: 'Cidade de teste' } });
+  recursosCriados.pontos.push(pontoExtra.id_ponto);
+  await espera(200, `/admin/pontos/${pontoExtra.id_ponto}`, { method: 'PUT', token: tokenAdmin, body: { nome: `Ponto teste ${identificador}`, endereco: 'Rua de teste, 2', cidade: 'Cidade de teste' } });
+  await espera(200, `/admin/pontos/${pontoExtra.id_ponto}`, { method: 'DELETE', token: tokenAdmin });
+  recursosCriados.pontos.pop();
   const propria = await espera(200, '/reciclagens', { token: comumA });
   assert.equal(propria.reciclagens.length, 1, 'usuário lista seu registro');
   const perfilA = await espera(200, '/usuarios/me', { token: comumA });
@@ -119,11 +157,16 @@ try {
   if (bancoDisponivel) {
     const [usuarios] = await pool.execute('SELECT id_usuario FROM usuarios WHERE email IN (?, ?, ?)', emails);
     const idsUsuarios = usuarios.map((usuario) => usuario.id_usuario);
+    if (doacoesCriadas.length) await pool.execute(`DELETE FROM doacoes WHERE id_doacao IN (${doacoesCriadas.map(() => '?').join(',')})`, doacoesCriadas);
+    if (idsUsuarios.length) await pool.execute(`DELETE FROM resgates WHERE id_usuario IN (${idsUsuarios.map(() => '?').join(',')})`, idsUsuarios);
     if (idsUsuarios.length) {
       const placeholders = idsUsuarios.map(() => '?').join(',');
       await pool.execute(`DELETE FROM reciclagens WHERE id_usuario IN (${placeholders})`, idsUsuarios);
       await pool.execute(`DELETE FROM usuarios WHERE id_usuario IN (${placeholders})`, idsUsuarios);
     }
+    for (const id of recursosCriados.recompensas) await pool.execute('DELETE FROM recompensas WHERE id_recompensa = ?', [id]);
+    for (const id of recursosCriados.materiais) await pool.execute('DELETE FROM materiais WHERE id_material = ?', [id]);
+    for (const id of recursosCriados.pontos) await pool.execute('DELETE FROM pontos_coleta WHERE id_ponto = ?', [id]);
   }
   await pool.end();
 }

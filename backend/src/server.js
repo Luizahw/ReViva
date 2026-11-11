@@ -4,6 +4,10 @@ import cors from 'cors';
 import usuariosRoutes from '../routes/usuariosRoutes.js';
 import reciclagensRoutes from '../routes/reciclagensRoutes.js';
 import catalogoRoutes from '../routes/catalogoRoutes.js';
+import jornadaRoutes from '../routes/jornadaRoutes.js';
+import recompensasRoutes from '../routes/recompensasRoutes.js';
+import doacoesRoutes from '../routes/doacoesRoutes.js';
+import adminRoutes from '../routes/adminRoutes.js';
 import { pool } from '../database/conexao.js';
 
 const ausentes = ['DB_HOST', 'DB_USER', 'DB_NAME', 'JWT_SECRET'].filter((nome) => !process.env[nome]);
@@ -21,6 +25,10 @@ app.get('/', (req, res) => res.status(200).json({ mensagem: 'API ReViva funciona
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/reciclagens', reciclagensRoutes);
+app.use('/api/jornada', jornadaRoutes);
+app.use('/api/recompensas', recompensasRoutes);
+app.use('/api/doacoes', doacoesRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api', catalogoRoutes);
 app.use((req, res) => res.status(404).json({ mensagem: 'Rota não encontrada.' }));
 app.use((error, req, res, next) => {

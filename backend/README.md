@@ -21,6 +21,19 @@ A API usa `PORT` quando definido, com padrão `3300`. O CORS aceita uma lista de
 | PATCH | `/api/usuarios/:id/tipo` | Administrador; altera para `comum` ou `administrador` |
 | GET | `/api/usuarios/me` | JWT válido |
 | GET | `/api/usuarios/admin` | Administrador |
+| GET | `/api/jornada` | JWT; nível e conquistas do usuário |
+| GET | `/api/jornada/ranking?periodo={semanal,mensal,geral}` | JWT; ranking sem e-mails |
+| GET | `/api/recompensas` | JWT; catálogo ativo com estoque |
+| GET | `/api/recompensas/resgates` | JWT; histórico próprio |
+| POST | `/api/recompensas/:id/resgatar` | JWT; resgate transacional |
+| GET | `/api/doacoes` | JWT; doações próprias |
+| POST | `/api/doacoes` | JWT; cadastro de doação |
+| GET | `/api/admin/indicadores` | Administrador |
+| POST/PUT/DELETE | `/api/admin/materiais[/:id]` | Administrador |
+| POST/PUT/DELETE | `/api/admin/pontos[/:id]` | Administrador |
+| GET/POST/PUT/DELETE | `/api/admin/recompensas[/:id]` | Administrador |
+| GET/PATCH | `/api/admin/resgates[/:id/status]` | Administrador |
+| GET/PATCH | `/api/admin/doacoes[/:id/status]` | Administrador |
 | GET | `/api/materiais` | Público; catálogo do MySQL |
 | GET | `/api/pontos` | Público; catálogo do MySQL |
 | GET | `/api/reciclagens` | JWT; próprio usuário ou todos para administrador |
@@ -35,6 +48,8 @@ Envie JSON nas operações de escrita. O cadastro de reciclagem recebe `id_mater
 ## Pontuação e consistência
 
 O backend calcula `Math.round(quantidade_kg * pontos_por_kg)` com o valor de `materiais`. Criação, edição e exclusão usam transação MySQL para manter o registro e o saldo do proprietário sincronizados. Na edição, o ajuste é a diferença entre pontos novos e anteriores.
+
+Execute `sql/migrations/001_plataforma.sql` depois de criar o esquema inicial. A migração adiciona níveis, conquistas, recompensas, resgates e doações sem recriar nem alterar as quatro tabelas originais. A lista de recompensas começa vazia: cadastre benefícios reais no painel administrativo. As conquistas são verificadas em transação ao registrar ou editar uma reciclagem; os níveis consideram pontos históricos gerados, não o saldo disponível. O ranking semanal usa os últimos sete dias e o mensal usa o último mês.
 
 ## Demonstração pelo Thunder Client
 

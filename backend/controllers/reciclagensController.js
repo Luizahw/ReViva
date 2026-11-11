@@ -1,4 +1,5 @@
 import { pool } from '../database/conexao.js';
+import { desbloquearConquistas } from '../services/jornadaService.js';
 
 const idValido = (valor) => /^\d+$/.test(String(valor)) && Number(valor) > 0 && Number.isSafeInteger(Number(valor));
 const validarEntrada = (body) => {
@@ -47,8 +48,9 @@ async function criar(req, res, next) {
     const pontos = Math.round(dados.quantidade_kg * Number(material.pontos_por_kg));
     const [resultado] = await conexao.execute('INSERT INTO reciclagens (id_usuario, id_material, id_ponto, quantidade_kg, pontos_gerados) VALUES (?, ?, ?, ?, ?)', [req.usuario.id_usuario, dados.id_material, dados.id_ponto, dados.quantidade_kg, pontos]);
     await conexao.execute('UPDATE usuarios SET pontos = pontos + ? WHERE id_usuario = ?', [pontos, req.usuario.id_usuario]);
+    const conquistas = await desbloquearConquistas(conexao, req.usuario.id_usuario);
     await conexao.commit();
-    return res.status(201).json({ mensagem: 'Reciclagem registrada.', id_reciclagem: resultado.insertId, pontos_gerados: pontos });
+    return res.status(201).json({ mensagem: 'Reciclagem registrada.', id_reciclagem: resultado.insertId, pontos_gerados: pontos, conquistas_desbloqueadas: conquistas });
   } catch (error) { if (conexao) await conexao.rollback(); return next(error); } finally { conexao?.release(); }
 }
 
@@ -68,10 +70,14 @@ async function atualizar(req, res, next) {
     const [[ponto]] = await conexao.execute('SELECT id_ponto FROM pontos_coleta WHERE id_ponto = ?', [dados.id_ponto]);
     if (!ponto) { await conexao.rollback(); return res.status(400).json({ mensagem: 'Ponto de coleta não encontrado.' }); }
     const pontos = Math.round(dados.quantidade_kg * Number(material.pontos_por_kg));
+    const ajuste = pontos - Number(anterior.pontos_gerados);
+    const [[saldo]] = await conexao.execute('SELECT pontos FROM usuarios WHERE id_usuario = ? FOR UPDATE', [anterior.id_usuario]);
+    if (Number(saldo.pontos) + ajuste < 0) { await conexao.rollback(); return res.status(409).json({ mensagem: 'A edição reduziria pontos já utilizados em resgates.' }); }
     await conexao.execute('UPDATE reciclagens SET id_material = ?, id_ponto = ?, quantidade_kg = ?, pontos_gerados = ? WHERE id_reciclagem = ?', [dados.id_material, dados.id_ponto, dados.quantidade_kg, pontos, Number(req.params.id)]);
-    await conexao.execute('UPDATE usuarios SET pontos = pontos + ? WHERE id_usuario = ?', [pontos - Number(anterior.pontos_gerados), anterior.id_usuario]);
+    await conexao.execute('UPDATE usuarios SET pontos = pontos + ? WHERE id_usuario = ?', [ajuste, anterior.id_usuario]);
+    const conquistas = await desbloquearConquistas(conexao, anterior.id_usuario);
     await conexao.commit();
-    return res.status(200).json({ mensagem: 'Reciclagem atualizada.', pontos_gerados: pontos });
+    return res.status(200).json({ mensagem: 'Reciclagem atualizada.', pontos_gerados: pontos, conquistas_desbloqueadas: conquistas });
   } catch (error) { if (conexao) await conexao.rollback(); return next(error); } finally { conexao?.release(); }
 }
 
@@ -84,6 +90,8 @@ async function excluir(req, res, next) {
     const [[registro]] = await conexao.execute('SELECT id_usuario, pontos_gerados FROM reciclagens WHERE id_reciclagem = ? FOR UPDATE', [Number(req.params.id)]);
     if (!registro) { await conexao.rollback(); return res.status(404).json({ mensagem: 'Reciclagem não encontrada.' }); }
     if (!permitido(req.usuario, registro.id_usuario)) { await conexao.rollback(); return res.status(403).json({ mensagem: 'Você não tem permissão para excluir este registro.' }); }
+    const [[saldo]] = await conexao.execute('SELECT pontos FROM usuarios WHERE id_usuario = ? FOR UPDATE', [registro.id_usuario]);
+    if (Number(saldo.pontos) < Number(registro.pontos_gerados)) { await conexao.rollback(); return res.status(409).json({ mensagem: 'A reciclagem gerou pontos já utilizados em resgates e não pode ser excluída.' }); }
     await conexao.execute('DELETE FROM reciclagens WHERE id_reciclagem = ?', [Number(req.params.id)]);
     await conexao.execute('UPDATE usuarios SET pontos = pontos - ? WHERE id_usuario = ?', [registro.pontos_gerados, registro.id_usuario]);
     await conexao.commit();
@@ -95,7 +103,10 @@ async function resumo(req, res, next) {
   try {
     const [rows] = await pool.execute('SELECT u.pontos, COUNT(r.id_reciclagem) AS total_reciclagens, COALESCE(SUM(r.quantidade_kg), 0) AS quilos_reciclados FROM usuarios u LEFT JOIN reciclagens r ON r.id_usuario = u.id_usuario WHERE u.id_usuario = ? GROUP BY u.id_usuario, u.pontos', [req.usuario.id_usuario]);
     const [recentes] = await pool.execute(`${selectJoin} WHERE r.id_usuario = ? ORDER BY r.data_reciclagem DESC, r.id_reciclagem DESC LIMIT 5`, [req.usuario.id_usuario]);
-    return res.status(200).json({ resumo: rows[0], atividades_recentes: recentes });
+    const [[historico]] = await pool.execute('SELECT COALESCE(SUM(pontos_gerados), 0) AS pontos_historicos FROM reciclagens WHERE id_usuario = ?', [req.usuario.id_usuario]);
+    const [mensal] = await pool.execute(`SELECT DATE_FORMAT(data_reciclagem, '%Y-%m') AS mes, SUM(quantidade_kg) AS quilos, SUM(pontos_gerados) AS pontos, COUNT(*) AS reciclagens FROM reciclagens WHERE id_usuario = ? AND data_reciclagem >= CURRENT_DATE - INTERVAL 11 MONTH GROUP BY DATE_FORMAT(data_reciclagem, '%Y-%m') ORDER BY mes`, [req.usuario.id_usuario]);
+    const [materiais] = await pool.execute('SELECT m.nome, SUM(r.quantidade_kg) AS quilos, SUM(r.pontos_gerados) AS pontos, COUNT(*) AS reciclagens FROM reciclagens r INNER JOIN materiais m ON m.id_material = r.id_material WHERE r.id_usuario = ? GROUP BY m.id_material, m.nome ORDER BY quilos DESC', [req.usuario.id_usuario]);
+    return res.status(200).json({ resumo: { ...rows[0], pontos_historicos: historico.pontos_historicos }, atividades_recentes: recentes, evolucao_mensal: mensal, materiais });
   } catch (error) { return next(error); }
 }
 

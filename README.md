@@ -18,12 +18,20 @@ Plataforma para registrar reciclagens, acompanhar pontos e consultar materiais e
 - Edição e exclusão transacionais com ajuste no saldo do proprietário;
 - Dashboard com pontos, total de reciclagens, quilos e atividades recentes consultados no banco;
 - Catálogos de materiais e pontos carregados pela API.
+- Jornada ReViva com níveis por pontos históricos e conquistas desbloqueadas automaticamente;
+- Impacto com evolução mensal e distribuição real por materiais;
+- Loja com resgates transacionais e histórico;
+- Ranking semanal, mensal e geral por pontos gerados, sem expor e-mails;
+- Cadastro e acompanhamento de doações de equipamentos;
+- Painel administrativo protegido para usuários, materiais, pontos, recompensas, resgates e doações.
 
 ## Iniciar
 
 1. Execute `sql/schema.sql` em um servidor MySQL.
-2. Copie `backend/.env.example` para `backend/.env`, informe as credenciais e configure um `JWT_SECRET` com no mínimo 32 caracteres. O `.env` está no `.gitignore`.
-3. No terminal, entre em `backend`, execute `npm install` e `npm run dev`.
-4. Abra `frontend/index.html` com Live Server. O padrão da API é `http://localhost:3300`; para Live Server em `127.0.0.1:5500`, defina `CORS_ORIGIN=http://127.0.0.1:5500` no `.env`.
+2. Execute `sql/migrations/001_plataforma.sql` no mesmo banco para instalar as tabelas novas, sem substituir os dados existentes.
+3. Copie `backend/.env.example` para `backend/.env`, informe as credenciais e configure um `JWT_SECRET` com no mínimo 32 caracteres. O `.env` está no `.gitignore`.
+4. No terminal, entre em `backend`, execute `npm install` e `npm run dev`.
+5. Promova a primeira conta diretamente no MySQL conforme o README do backend; o cadastro público nunca concede administração.
+6. Abra `frontend/index.html` com Live Server. O padrão da API é `http://localhost:3300`; para Live Server em `127.0.0.1:5500`, defina `CORS_ORIGIN=http://127.0.0.1:5500` no `.env`.
 
 Consulte [backend/README.md](backend/README.md) para a tabela de rotas e roteiro de demonstração no Thunder Client. O cadastro público não cria administradores; uma conta de teste pode ser promovida diretamente no banco local.

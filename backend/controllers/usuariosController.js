@@ -12,7 +12,7 @@ async function cadastrar(req, res, next) {
     }
     if (!emailValido(email.trim())) return res.status(400).json({ mensagem: 'Formato de e-mail inválido.' });
     if (senha.length < 8) return res.status(400).json({ mensagem: 'A senha deve ter pelo menos 8 caracteres.' });
-    if (nome.trim().length > 120 || email.trim().length > 255) {
+    if (nome.trim().length > 100 || email.trim().length > 150) {
       return res.status(400).json({ mensagem: 'Nome ou e-mail excede o tamanho permitido.' });
     }
 
