@@ -1,1 +1,51 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f3f5ed"><meta name="description" content="ReViva &mdash; recicle o presente, reutilize o futuro."><title>In&#237;cio | ReViva</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css"><script>(()=>{const t=localStorage.getItem('reviva_theme');document.documentElement.dataset.theme=t==='dark'?'dark':'light'})()</script></head><body data-page="dashboard"><div class="app-layout"><aside id="appSidebar" class="app-sidebar"></aside><div class="app-main"><header id="appHeader" class="app-header"></header><main class="page-content"><div class="page-heading"><p class="eyebrow">JORNADA REVIVA</p><h1 data-page-title>In&#237;cio</h1><p class="muted">Pequenas escolhas, um ciclo melhor.</p></div><section class="welcome-line"><div><p class="eyebrow">BEM-VINDA(O) DE VOLTA</p><h2>Ol&aacute;, <span id="welcomeName">pessoa</span></h2><p class="muted">Cada material no destino certo faz diferen&ccedil;a.</p></div><span class="welcome-mark" aria-hidden="true">&#10047;</span></section><section class="metric-grid"><article class="metric-card metric-primary"><span class="metric-label">PONTOS DISPON&Iacute;VEIS</span><strong id="dashPoints">&mdash;</strong><a href="recompensas.html">Ver recompensas <span>&rarr;</span></a></article><article class="metric-card"><span class="metric-label">RECICLAGENS</span><strong id="dashCount">&mdash;</strong><small>entregas registradas</small></article><article class="metric-card"><span class="metric-label">QUILOS RECICLADOS</span><strong id="dashWeight">&mdash;</strong><small>peso total registrado</small></article></section><section class="feature-banner"><div><p class="eyebrow">SEU PR&Oacute;XIMO PASSO</p><h2>Recicle. Conquiste. Fa&ccedil;a a diferen&ccedil;a.</h2><p>Registre uma entrega e acompanhe seu progresso na Jornada ReViva.</p><a class="button button-lime" href="reciclar.html">Registrar reciclagem <span>&rarr;</span></a></div><div class="banner-leaves" aria-hidden="true"></div></section><section class="section-block"><div class="section-heading"><div><p class="eyebrow">JORNADA REVIVA</p><h2>Seu caminho at&eacute; aqui</h2></div><a class="text-link" href="conquistas.html">Ver conquistas</a></div><article class="journey-card"><div class="journey-top"><span id="dashLevelIcon" class="level-symbol">&#10047;</span><div class="journey-copy"><span class="metric-label">N&Iacute;VEL ATUAL</span><h3 id="dashLevel">Semente</h3><p id="dashNext">Carregando progresso...</p></div><strong id="dashLifetime" class="lifetime-points">&mdash; pts</strong></div><div class="progress-track"><span id="dashProgress"></span></div><div class="progress-labels"><span id="dashProgressStart">0 pts</span><span id="dashProgressEnd">Pr&oacute;ximo n&iacute;vel</span></div></article></section><section class="section-block"><div class="section-heading"><div><p class="eyebrow">RECENTEMENTE</p><h2>Conquistas</h2></div><a class="text-link" href="conquistas.html">Jornada completa</a></div><div id="recentAchievements" class="achievement-row"><div class="loading-state">Carregando conquistas...</div></div></section></main><footer class="app-footer"><span>REVIVA</span><span>Recicle o presente, reutilize o futuro.</span></footer></div><nav id="mobileNav" class="mobile-nav" aria-label="Navega&ccedil;&atilde;o movel"></nav></div><dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><p id="confirmText">Confirmar a&ccedil;&atilde;o?</p><div><button class="button button-quiet" value="cancel">Cancelar</button><button class="button button-primary" value="confirm">Confirmar</button></div></form></dialog><script type="module" src="js/app.js"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f5ed"><meta name="description" content="ReViva — recicle o presente, reutilize o futuro.">
+  <title>Início | ReViva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>(()=>{const t=localStorage.getItem('reviva_theme');document.documentElement.dataset.theme=t==='dark'?'dark':'light'})()</script>
+</head>
+<body data-page="dashboard">
+  <div class="app-layout">
+    <aside id="appSidebar" class="app-sidebar"></aside>
+    <div class="app-main">
+      <header id="appHeader" class="app-header"></header>
+      <main class="page-content dashboard-content">
+        <section class="dashboard-welcome">
+          <div><p class="eyebrow">JORNADA REVIVA</p><h1>Olá, <span id="welcomeName" aria-live="polite">—</span></h1><p class="welcome-copy">Juntos por um planeta mais verde.</p></div>
+          <span class="welcome-leaf" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="assets/ui-icons.svg#leaf"></use></svg></span>
+        </section>
+        <p id="dashboardFeedback" class="feedback" role="status" hidden></p>
+        <p id="emptyActivity" class="empty-activity" hidden>Você ainda não registrou reciclagens. Sua primeira entrega inicia a Jornada ReViva.</p>
+        <section class="metric-grid dashboard-metrics" aria-label="Resumo da atividade">
+          <article class="metric-card"><div><span class="metric-label">PONTOS DISPONÍVEIS</span><strong id="dashPoints">—</strong><a href="recompensas.html">Ver recompensas <span aria-hidden="true">→</span></a></div><span class="metric-visual" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="assets/ui-icons.svg#leaf"></use></svg></span></article>
+          <article class="metric-card"><div><span class="metric-label">RECICLAGENS</span><strong id="dashCount">—</strong><small>entregas registradas · <a href="historico.html">Ver histórico</a></small></div><span class="metric-visual" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="assets/ui-icons.svg#recycle"></use></svg></span></article>
+          <article class="metric-card"><div><span class="metric-label">QUILOGRAMAS RECICLADOS</span><strong id="dashWeight">—</strong><small>peso total registrado</small></div><span class="metric-visual" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="assets/ui-icons.svg#bag"></use></svg></span></article>
+        </section>
+        <section class="feature-banner dashboard-banner">
+          <div><p class="eyebrow">SEU PRÓXIMO PASSO</p><h2>Recicle. Conquiste. Faça a diferença.</h2><a class="button button-lime" href="reciclar.html">Registrar reciclagem <span aria-hidden="true">→</span></a></div>
+          <div class="banner-leaves" aria-hidden="true"></div>
+        </section>
+        <div class="dashboard-bottom">
+          <section class="section-block journey-section">
+            <div class="section-heading"><div><p class="eyebrow">SUA EVOLUÇÃO</p><h2>Jornada ReViva</h2></div><a class="text-link" href="conquistas.html">Ver detalhes <span aria-hidden="true">→</span></a></div>
+            <article class="journey-card"><div class="journey-top"><span id="dashLevelIcon" class="level-symbol" aria-hidden="true"></span><div class="journey-copy"><span class="metric-label">NÍVEL ATUAL</span><h3 id="dashLevel">—</h3><p id="dashNext">Carregando progresso...</p></div></div><div class="progress-track"><span id="dashProgress"></span></div><div class="progress-labels"><span id="dashProgressStart">—</span><span id="dashProgressEnd">Próximo nível</span></div></article>
+          </section>
+          <section class="section-block achievements-section">
+            <div class="section-heading"><div><p class="eyebrow">SEUS MARCOS</p><h2>Suas conquistas</h2></div><a class="text-link" href="conquistas.html">Ver todas <span aria-hidden="true">→</span></a></div>
+            <div id="recentAchievements" class="achievement-row"><div class="loading-state">Carregando conquistas...</div></div>
+          </section>
+        </div>
+      </main>
+      <footer class="app-footer"><span>REVIVA</span><span>Recicle o presente, reutilize o futuro.</span></footer>
+    </div>
+    <nav id="mobileNav" class="mobile-nav" aria-label="Navegação móvel"></nav>
+  </div>
+  <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><p id="confirmText">Confirmar ação?</p><div><button class="button button-quiet" value="cancel">Cancelar</button><button class="button button-primary" value="confirm">Confirmar</button></div></form></dialog>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

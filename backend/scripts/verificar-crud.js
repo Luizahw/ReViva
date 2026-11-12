@@ -50,7 +50,8 @@ try {
   assert.ok(listaAdmin.usuarios.every((usuario) => !Object.hasOwn(usuario, 'senha')), 'listagem nunca inclui senha');
   await espera(403, '/usuarios', { token: comumA });
   await espera(403, `/usuarios/${perfilNovo.usuario.id_usuario}/tipo`, { method: 'PATCH', token: comumA, body: { tipo_usuario: 'administrador' } });
-  await espera(403, `/usuarios/${perfilNovo.usuario.id_usuario}/tipo`, { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'comum' } });
+  const perfilAdmin = (await espera(200, '/usuarios/me', { token: tokenAdmin })).usuario;
+  await espera(403, `/usuarios/${perfilAdmin.id_usuario}/tipo`, { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'comum' } });
   await espera(400, '/usuarios/invalido/tipo', { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'comum' } });
   await espera(400, `/usuarios/${perfilNovo.usuario.id_usuario}/tipo`, { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'superadmin' } });
   await espera(404, '/usuarios/2147483647/tipo', { method: 'PATCH', token: tokenAdmin, body: { tipo_usuario: 'comum' } });

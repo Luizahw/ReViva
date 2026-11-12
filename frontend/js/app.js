@@ -16,19 +16,43 @@ function confirmAction(text) {
 
 function roleName(role) { return role === 'administrador' ? 'administrador' : 'usuário comum'; }
 
+function svgIcon(name, className = '') {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
+  if (className) svg.setAttribute('class', className);
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', `assets/ui-icons.svg#${name}`); svg.append(use);
+  return svg;
+}
+
 async function loadDashboard() {
-  const [summaryData, journeyData] = await Promise.all([api('/reciclagens/resumo'), api('/jornada')]);
-  const stats = summaryData.resumo;
-  document.querySelector('#welcomeName').textContent = (user.nome || 'pessoa').trim().split(/\s+/)[0];
-  document.querySelector('#dashPoints').textContent = formatNumber(stats.pontos);
-  document.querySelector('#dashCount').textContent = formatNumber(stats.total_reciclagens);
-  document.querySelector('#dashWeight').textContent = `${formatNumber(stats.quilos_reciclados, 2)} kg`;
-  const journey = journeyData.jornada;
-  setProgress(journey, '#dashLevel', '#dashNext', '#dashLifetime', '#dashProgress', '#dashProgressStart', '#dashProgressEnd', '#dashLevelIcon');
-  const recent = (journey.conquistas || []).filter((item) => item.desbloqueada_em).sort((a,b) => new Date(b.desbloqueada_em) - new Date(a.desbloqueada_em)).slice(0,3);
-  const list = document.querySelector('#recentAchievements'); list.replaceChildren();
-  if (!recent.length) list.append(element('p', 'empty-state', 'Sua primeira conquista chega com a primeira reciclagem.'));
-  recent.forEach((item) => list.append(achievementCard(item, true)));
+  document.querySelector('#welcomeName').textContent = (user.nome || '').trim().split(/\s+/)[0] || '—';
+  const errors = [];
+  try {
+    const { resumo } = await api('/reciclagens/resumo');
+    document.querySelector('#dashPoints').textContent = formatNumber(resumo.pontos);
+    document.querySelector('#dashCount').textContent = formatNumber(resumo.total_reciclagens);
+    document.querySelector('#dashWeight').textContent = `${formatNumber(resumo.quilos_reciclados, 1)} kg`;
+    document.querySelector('#emptyActivity').hidden = Number(resumo.total_reciclagens) > 0;
+  } catch (error) {
+    document.querySelector('#dashPoints').textContent = '—';
+    document.querySelector('#dashCount').textContent = '—';
+    document.querySelector('#dashWeight').textContent = '—';
+    errors.push(`Não foi possível carregar os indicadores de reciclagem: ${error.message}`);
+  }
+  try {
+    const { jornada } = await api('/jornada');
+    setProgress(jornada, '#dashLevel', '#dashNext', null, '#dashProgress', '#dashProgressStart', '#dashProgressEnd', '#dashLevelIcon');
+    const unlocked = (jornada.conquistas || []).filter((item) => item.desbloqueada_em).sort((a,b) => new Date(b.desbloqueada_em) - new Date(a.desbloqueada_em));
+    const locked = (jornada.conquistas || []).filter((item) => !item.desbloqueada_em);
+    const list = document.querySelector('#recentAchievements'); list.replaceChildren();
+    [...unlocked, ...locked].slice(0, 3).forEach((item) => list.append(achievementCard(item, true)));
+    if (!jornada.conquistas?.length) list.append(element('p', 'empty-state', 'As conquistas aparecerão aqui quando a Jornada estiver configurada.'));
+  } catch (error) {
+    errors.push(`Não foi possível carregar a Jornada ReViva: ${error.message}`);
+    document.querySelector('#recentAchievements').replaceChildren(element('p', 'empty-state', 'Conquistas temporariamente indisponíveis.'));
+  }
+  if (errors.length) feedback(document.querySelector('#dashboardFeedback'), errors.join(' '));
 }
 
 function setProgress(journey, levelSelector, nextSelector, lifetimeSelector, barSelector, fromSelector, toSelector, iconSelector) {
@@ -38,11 +62,11 @@ function setProgress(journey, levelSelector, nextSelector, lifetimeSelector, bar
   const percent = next ? Math.max(0, Math.min(100, ((points - start) / Math.max(1, end - start)) * 100)) : 100;
   if (document.querySelector(levelSelector)) document.querySelector(levelSelector).textContent = level?.nome || 'Semente';
   if (document.querySelector(nextSelector)) document.querySelector(nextSelector).textContent = next ? `${formatNumber(Math.max(0,end-points))} pontos para ${next.nome}` : 'Nível máximo alcançado';
-  if (document.querySelector(lifetimeSelector)) document.querySelector(lifetimeSelector).textContent = `${formatNumber(points)} pts`;
+  if (lifetimeSelector && document.querySelector(lifetimeSelector)) document.querySelector(lifetimeSelector).textContent = `${formatNumber(points)} pts`;
   if (document.querySelector(barSelector)) document.querySelector(barSelector).style.width = `${percent}%`;
   if (document.querySelector(fromSelector)) document.querySelector(fromSelector).textContent = `${formatNumber(points)} pts`;
   if (document.querySelector(toSelector)) document.querySelector(toSelector).textContent = next ? `${formatNumber(end)} pts · ${next.nome}` : 'Nível máximo';
-  if (document.querySelector(iconSelector)) document.querySelector(iconSelector).textContent = level?.icone === 'tree' ? '♧' : level?.icone === 'shield-leaf' ? '♢' : '♧';
+  if (iconSelector && document.querySelector(iconSelector)) document.querySelector(iconSelector).replaceChildren(svgIcon('plant'));
 }
 
 async function initRecycle() {
@@ -135,7 +159,7 @@ function achievementCriterion(item) {
 
 function achievementCard(item, compact=false) {
   const card=element('article',`achievement-card${item.desbloqueada_em?' unlocked':''}${compact?' compact':''}`);
-  card.append(element('span','achievement-icon',item.desbloqueada_em?'✦':'◇'));
+  const medal = element('span','achievement-icon'); medal.append(svgIcon(item.desbloqueada_em?'medal':'lock')); card.append(medal);
   const text=element('div','achievement-content');text.append(element('h3','',item.nome),element('p','',item.descricao));
   if(!compact)text.append(element('small','',`Critério: ${achievementCriterion(item)}`));
   text.append(element('small','achievement-status',item.desbloqueada_em?`Desbloqueada · ${formatDate(item.desbloqueada_em)}`:'Pendente'));
@@ -157,7 +181,7 @@ async function initRewards() {
   if(!catalog.recompensas.length)list.append(element('p','empty-state','Nenhuma recompensa ativa com estoque dispon&iacute;vel.'));
   catalog.recompensas.forEach((item)=>{
     const card=element('article','reward-card');
-    if(item.imagem_url){const image=document.createElement('img');image.src=item.imagem_url;image.alt='';image.loading='lazy';card.append(image);}else card.append(element('span','reward-mark','♧'));
+    if(item.imagem_url){const image=document.createElement('img');image.src=item.imagem_url;image.alt='';image.loading='lazy';card.append(image);}else {const mark=element('span','reward-mark');mark.append(svgIcon('leaf'));card.append(mark);}
     card.append(element('p','eyebrow',item.parceiro),element('h2','',item.nome),element('p','reward-description',item.descricao),element('strong','reward-cost',`${formatNumber(item.pontos_necessarios)} pontos`),element('small','reward-stock',`${formatNumber(item.quantidade)} dispon&iacute;veis`));
     const button=element('button','button button-primary','Resgatar');button.type='button';button.addEventListener('click',async()=>{
       if(!(await confirmAction(`Resgatar ${item.nome} por ${formatNumber(item.pontos_necessarios)} pontos?`)))return;
@@ -194,7 +218,7 @@ async function initDonations() {
 
 async function initPoints() {
   const {pontos}=await api('/pontos');const input=document.querySelector('#pointSearch');const target=document.querySelector('#pointsList');
-  const render=()=>{const term=input.value.trim().toLocaleLowerCase('pt-BR');const matches=pontos.filter((item)=>`${item.nome} ${item.cidade}`.toLocaleLowerCase('pt-BR').includes(term));target.replaceChildren();if(!matches.length){target.append(element('p','empty-state','Nenhum ponto corresponde à busca.'));return;}matches.forEach((item)=>{const card=element('article','collection-card');card.append(element('span','collection-icon','⌖'),element('h2','',item.nome),element('p','',item.endereco),element('strong','',item.cidade));if(item.descricao)card.append(element('p','collection-description',item.descricao));const map=element('a','text-link','Abrir no Google Maps ↗');map.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([item.nome,item.endereco,item.cidade].join(', '))}`;map.target='_blank';map.rel='noopener noreferrer';card.append(map);target.append(card);});};
+  const render=()=>{const term=input.value.trim().toLocaleLowerCase('pt-BR');const matches=pontos.filter((item)=>`${item.nome} ${item.cidade}`.toLocaleLowerCase('pt-BR').includes(term));target.replaceChildren();if(!matches.length){target.append(element('p','empty-state','Nenhum ponto corresponde à busca.'));return;}matches.forEach((item)=>{const card=element('article','collection-card');const marker=element('span','collection-icon');marker.append(svgIcon('pin'));card.append(marker,element('h2','',item.nome),element('p','',item.endereco),element('strong','',item.cidade));if(item.descricao)card.append(element('p','collection-description',item.descricao));const map=element('a','text-link','Abrir no Google Maps ↗');map.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([item.nome,item.endereco,item.cidade].join(', '))}`;map.target='_blank';map.rel='noopener noreferrer';card.append(map);target.append(card);});};
   input.addEventListener('input',render);render();
 }
 
