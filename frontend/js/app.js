@@ -1,6 +1,6 @@
 import { api, saveUser, formatDate, formatNumber, element, feedback, logout } from './api.js';
 import { requireUser, mountLayout } from './layout.js';
-import { currentTheme, setTheme } from './theme.js';
+import { currentTheme, setTheme, accessibilityPreferences, setAccessibilityPreference, applyAccessibilityPreferences } from './theme.js';
 
 const page = document.body.dataset.page;
 let user;
@@ -227,8 +227,12 @@ async function initProfile() {
   document.querySelector('#profileAvatar').textContent=(user.nome||'R').trim().charAt(0).toUpperCase();
   document.querySelector('#profileType').textContent=roleName(user.tipo_usuario);document.querySelector('#profilePoints').textContent=`${formatNumber(user.pontos)} pts`;document.querySelector('#profileDate').textContent=formatDate(user.data_cadastro);
   document.querySelector('#profileLogout').addEventListener('click',logout);
-  document.querySelectorAll('[data-set-theme]').forEach((button)=>button.addEventListener('click',()=>{setTheme(button.dataset.setTheme);document.querySelectorAll('[data-set-theme]').forEach((option)=>option.classList.toggle('selected',option.dataset.setTheme===currentTheme()));}));
-  document.querySelectorAll('[data-set-theme]').forEach((button)=>button.classList.toggle('selected',button.dataset.setTheme===currentTheme()));
+  const syncThemeChoices=()=>document.querySelectorAll('[data-set-theme]').forEach((option)=>{const selected=option.dataset.setTheme===currentTheme();option.classList.toggle('selected',selected);option.setAttribute('aria-pressed',String(selected));});
+  document.querySelectorAll('[data-set-theme]').forEach((button)=>button.addEventListener('click',()=>{setTheme(button.dataset.setTheme);syncThemeChoices();}));
+  syncThemeChoices();
+  document.querySelectorAll('[data-text-size]').forEach((button)=>button.addEventListener('click',()=>{setAccessibilityPreference('textSize',button.dataset.textSize);applyAccessibilityPreferences();}));
+  document.querySelectorAll('[data-a11y-toggle]').forEach((button)=>button.addEventListener('click',()=>{const preferences=accessibilityPreferences();const key=button.dataset.a11yToggle==='contrast'?'highContrast':'reduceMotion';setAccessibilityPreference(key,!preferences[key]);}));
+  applyAccessibilityPreferences();
 }
 
 async function initUserSettings() {
@@ -246,7 +250,7 @@ async function initUserSettings() {
 function adminList(target,items,kind) {
   const list=document.querySelector(target);list.replaceChildren();
   items.forEach((item)=>{const li=element('li','admin-list-row');const key=kind==='material'?'id_material':kind==='point'?'id_ponto':'id_recompensa';const title=kind==='material'?`${item.nome} · ${formatNumber(item.pontos_por_kg,2)} pts/kg`:kind==='point'?`${item.nome} · ${item.cidade}`:item.nome;li.append(element('span','',title));
-    const edit=element('button','text-button','Editar');edit.type='button';edit.addEventListener('click',()=>{const form=document.querySelector(kind==='material'?'#materialForm':kind==='point'?'#pointForm':'#adminRewardForm');Object.entries(item).forEach(([name,value])=>{if(form.elements[name])form.elements[name].value=value??'';});if(kind==='reward'&&form.elements.ativa)form.elements.ativa.checked=Boolean(item.ativa);form.scrollIntoView({behavior:'smooth',block:'center'});});
+    const edit=element('button','text-button','Editar');edit.type='button';edit.addEventListener('click',()=>{const form=document.querySelector(kind==='material'?'#materialForm':kind==='point'?'#pointForm':'#adminRewardForm');Object.entries(item).forEach(([name,value])=>{if(form.elements[name])form.elements[name].value=value??'';});if(kind==='reward'&&form.elements.ativa)form.elements.ativa.checked=Boolean(item.ativa);form.scrollIntoView({behavior:document.documentElement.dataset.reduceMotion==='true'?'auto':'smooth',block:'center'});});
     const remove=element('button','text-button danger','Excluir');remove.type='button';remove.addEventListener('click',async()=>{if(!(await confirmAction('Excluir este item? Registros vinculados serao preservados.')))return;const path=kind==='material'?'materiais':kind==='point'?'pontos':'recompensas';try{const result=await api(`/admin/${path}/${item[key]}`,{method:'DELETE'});feedback(document.querySelector('#adminFeedback'),result.mensagem,'success');await loadAdmin();}catch(error){feedback(document.querySelector('#adminFeedback'),error.message);}});
     li.append(edit,remove);list.append(li);});
   if(!items.length)list.append(element('li','empty-state','Nenhum registro cadastrado.'));
@@ -290,7 +294,7 @@ async function boot() {
     await initializers[page]?.();
   } catch(error) {
     if(error.message==='Sessão encerrada.')return;
-    const target=document.querySelector('.page-content');if(target){const notice=element('p','feedback error',error.message);target.prepend(notice);}
+    const target=document.querySelector('.page-content');if(target){const notice=element('p','feedback error',error.message);notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');target.prepend(notice);}
   }
 }
 

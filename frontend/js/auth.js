@@ -51,6 +51,6 @@ document.addEventListener('click', (event) => {
 });
 
 if (new URLSearchParams(location.search).get('criada') === '1') {
-  const note = document.createElement('p'); note.className = 'feedback success'; note.textContent = 'Conta criada. Entre para começar.';
+  const note = document.createElement('p'); note.className = 'feedback success'; note.setAttribute('role', 'status'); note.setAttribute('aria-live', 'polite'); note.textContent = 'Conta criada. Entre para começar.';
   loginForm?.querySelector('.auth-switch')?.before(note);
 }

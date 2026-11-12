@@ -7,14 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <script>(()=>{const t=localStorage.getItem('reviva_theme');document.documentElement.dataset.theme=t==='dark'?'dark':'light'})()</script>
+  <script>(()=>{const t=localStorage.getItem('reviva_theme');document.documentElement.dataset.theme=t==='dark'?'dark':'light';const s=localStorage.getItem('reviva_text_size');document.documentElement.dataset.textSize=['small','large','larger'].includes(s)?s:'normal';document.documentElement.dataset.highContrast=localStorage.getItem('reviva_high_contrast')==='true';document.documentElement.dataset.reduceMotion=localStorage.getItem('reviva_reduce_motion')==='true'})()</script>
 </head>
 <body data-page="dashboard">
   <div class="app-layout">
     <aside id="appSidebar" class="app-sidebar"></aside>
     <div class="app-main">
       <header id="appHeader" class="app-header"></header>
-      <main class="page-content dashboard-content">
+      <a class="skip-link" href="#mainContent">Pular para o conte&uacute;do</a><main id="mainContent" class="page-content dashboard-content">
         <section class="dashboard-welcome">
           <div><p class="eyebrow">JORNADA REVIVA</p><h1>Olá, <span id="welcomeName" aria-live="polite">—</span></h1><p class="welcome-copy">Juntos por um planeta mais verde.</p></div>
           <span class="welcome-leaf" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="assets/ui-icons.svg#leaf"></use></svg></span>

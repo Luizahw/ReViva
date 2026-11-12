@@ -49,5 +49,8 @@ export function element(tag, className, text) {
 export function feedback(node, text, type = 'error') {
   node.textContent = text;
   node.className = `feedback ${type}`;
+  node.setAttribute('role', 'status');
+  node.setAttribute('aria-live', 'polite');
+  node.setAttribute('aria-atomic', 'true');
   node.hidden = !text;
 }

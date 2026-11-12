@@ -35,7 +35,7 @@ export function mountLayout(page, user) {
 
   const asideHead = document.createElement('div');
   asideHead.className = 'sidebar-brand';
-  asideHead.innerHTML = '<a href="dashboard.html" class="brand brand-lockup"><span class="brand-mark brand-symbol" aria-hidden="true">♻️</span><span>ReViva</span></a><p>Recicle o presente,<br>reutilize o futuro.</p>';
+  asideHead.innerHTML = '<a href="dashboard.html" class="brand brand-lockup"><span class="brand-mark brand-symbol" aria-hidden="true">&#x267B;&#xFE0F;</span><span>ReViva</span></a><p>Recicle o presente,<br>reutilize o futuro.</p>';
   const nav = document.createElement('nav'); nav.className = 'side-nav'; nav.setAttribute('aria-label', 'Navegação principal');
   navigation.forEach(([key, href, label, iconName]) => {
     const link = document.createElement('a'); link.href = href; link.className = 'nav-link'; link.dataset.nav = key;
@@ -65,7 +65,7 @@ export function mountLayout(page, user) {
   const topbar = document.createElement('div'); topbar.className = 'topbar-inner';
   const heading = document.createElement('div'); heading.className = 'topbar-heading';
   const headerMark = document.createElement('span'); headerMark.className = 'topbar-logo';
-  const headerSymbol = document.createElement('span'); headerSymbol.className = 'topbar-logo-symbol'; headerSymbol.textContent = '♻️'; headerSymbol.setAttribute('aria-hidden', 'true');
+  const headerSymbol = document.createElement('span'); headerSymbol.className = 'topbar-logo-symbol'; headerSymbol.textContent = '\u267B\uFE0F'; headerSymbol.setAttribute('aria-hidden', 'true');
   headerMark.append(headerSymbol, Object.assign(document.createElement('span'), { className: 'topbar-logo-name', textContent: 'ReViva' }));
   const pageName = document.createElement('div'); pageName.className = 'topbar-title'; pageName.append(Object.assign(document.createElement('span'), { className: 'eyebrow', textContent: 'SUSTENTABILIDADE · RECICLAGEM E REUTILIZAÇÃO' }), Object.assign(document.createElement('strong'), { textContent: title }));
   heading.append(headerMark, pageName);
@@ -82,6 +82,7 @@ export function mountLayout(page, user) {
   const logoutLink = document.createElement('button'); logoutLink.type = 'button'; logoutLink.textContent = 'Sair da conta'; logoutLink.addEventListener('click', logout); profileDropdown.append(logoutLink);
   profileButton.addEventListener('click', () => { profileDropdown.hidden = !profileDropdown.hidden; profileButton.setAttribute('aria-expanded', String(!profileDropdown.hidden)); });
   document.addEventListener('click', (event) => { if (!profileMenu.contains(event.target)) { profileDropdown.hidden = true; profileButton.setAttribute('aria-expanded', 'false'); } });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !profileDropdown.hidden) { profileDropdown.hidden = true; profileButton.setAttribute('aria-expanded', 'false'); profileButton.focus(); } });
   profileMenu.append(profileButton, profileDropdown);
   actions.append(themeButton, profileMenu); topbar.append(heading, actions); header.replaceChildren(topbar);
 
