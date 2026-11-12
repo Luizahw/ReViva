@@ -5,6 +5,8 @@ import { currentTheme, setTheme, accessibilityPreferences, setAccessibilityPrefe
 const page = document.body.dataset.page;
 let user;
 let adminData = { materials: [], points: [], rewards: [] };
+let dashboardSummaryLoaded = false;
+let dashboardRecyclingCount = null;
 
 function confirmAction(text) {
   const dialog = document.querySelector('#confirmDialog');
@@ -27,45 +29,69 @@ function svgIcon(name, className = '') {
 
 async function loadDashboard() {
   document.querySelector('#welcomeName').textContent = (user.nome || '').trim().split(/\s+/)[0] || '—';
-  const errors = [];
+  dashboardSummaryLoaded = false;
+  dashboardRecyclingCount = null;
+  document.querySelector('#emptyActivity').hidden = true;
+  feedback(document.querySelector('#dashboardFeedback'), '');
   try {
     const { resumo } = await api('/reciclagens/resumo');
     document.querySelector('#dashPoints').textContent = formatNumber(resumo.pontos);
     document.querySelector('#dashCount').textContent = formatNumber(resumo.total_reciclagens);
     document.querySelector('#dashWeight').textContent = `${formatNumber(resumo.quilos_reciclados, 1)} kg`;
-    document.querySelector('#emptyActivity').hidden = Number(resumo.total_reciclagens) > 0;
+    dashboardSummaryLoaded = true;
+    dashboardRecyclingCount = Number(resumo.total_reciclagens);
   } catch (error) {
     document.querySelector('#dashPoints').textContent = '—';
     document.querySelector('#dashCount').textContent = '—';
     document.querySelector('#dashWeight').textContent = '—';
-    errors.push(`Não foi possível carregar os indicadores de reciclagem: ${error.message}`);
+    feedback(document.querySelector('#dashboardFeedback'), `Não foi possível carregar os indicadores de reciclagem: ${error.message}`);
   }
+  await loadDashboardJourney();
+}
+
+async function loadDashboardJourney() {
+  const list = document.querySelector('#recentAchievements');
+  const journeyFeedback = document.querySelector('#journeyFeedback');
+  list.replaceChildren(element('p', 'loading-state', 'Carregando Jornada ReViva...'));
   try {
     const { jornada } = await api('/jornada');
     setProgress(jornada, '#dashLevel', '#dashNext', null, '#dashProgress', '#dashProgressStart', '#dashProgressEnd', '#dashLevelIcon');
     const unlocked = (jornada.conquistas || []).filter((item) => item.desbloqueada_em).sort((a,b) => new Date(b.desbloqueada_em) - new Date(a.desbloqueada_em));
     const locked = (jornada.conquistas || []).filter((item) => !item.desbloqueada_em);
-    const list = document.querySelector('#recentAchievements'); list.replaceChildren();
+    list.replaceChildren();
     [...unlocked, ...locked].slice(0, 3).forEach((item) => list.append(achievementCard(item, true)));
     if (!jornada.conquistas?.length) list.append(element('p', 'empty-state', 'As conquistas aparecerão aqui quando a Jornada estiver configurada.'));
+    feedback(journeyFeedback, '');
+    document.querySelector('#emptyActivity').hidden = !(dashboardSummaryLoaded && dashboardRecyclingCount === 0);
+    return true;
   } catch (error) {
-    errors.push(`Não foi possível carregar a Jornada ReViva: ${error.message}`);
-    document.querySelector('#recentAchievements').replaceChildren(element('p', 'empty-state', 'Conquistas temporariamente indisponíveis.'));
+    list.replaceChildren(element('p', 'empty-state', 'A Jornada ReViva está temporariamente indisponível. Confira sua conexão e tente novamente.'));
+    const retry = element('button', 'button button-quiet', 'Tentar novamente');
+    retry.type = 'button';
+    retry.addEventListener('click', async () => {
+      retry.disabled = true;
+      retry.textContent = 'Tentando novamente...';
+      await loadDashboardJourney();
+    }, { once: true });
+    list.append(retry);
+    feedback(journeyFeedback, `Não foi possível carregar a Jornada ReViva: ${error.message}`);
+    document.querySelector('#emptyActivity').hidden = true;
+    return false;
   }
-  if (errors.length) feedback(document.querySelector('#dashboardFeedback'), errors.join(' '));
 }
 
 function setProgress(journey, levelSelector, nextSelector, lifetimeSelector, barSelector, fromSelector, toSelector, iconSelector) {
   const level = journey.nivel; const next = journey.proximo_nivel;
   const points = Number(journey.estatisticas?.pontos_historicos || 0);
+  const hasLevels = Array.isArray(journey.niveis) && journey.niveis.length > 0;
   const start = Number(level?.pontos_minimos || 0); const end = Number(next?.pontos_minimos || start);
-  const percent = next ? Math.max(0, Math.min(100, ((points - start) / Math.max(1, end - start)) * 100)) : 100;
-  if (document.querySelector(levelSelector)) document.querySelector(levelSelector).textContent = level?.nome || 'Semente';
-  if (document.querySelector(nextSelector)) document.querySelector(nextSelector).textContent = next ? `${formatNumber(Math.max(0,end-points))} pontos para ${next.nome}` : 'Nível máximo alcançado';
+  const percent = !hasLevels ? 0 : next ? Math.max(0, Math.min(100, ((points - start) / Math.max(1, end - start)) * 100)) : 100;
+  if (document.querySelector(levelSelector)) document.querySelector(levelSelector).textContent = level?.nome || 'Níveis não configurados';
+  if (document.querySelector(nextSelector)) document.querySelector(nextSelector).textContent = next ? `${formatNumber(Math.max(0,end-points))} pontos para ${next.nome}` : level ? 'Nível máximo alcançado' : 'Progresso indisponível';
   if (lifetimeSelector && document.querySelector(lifetimeSelector)) document.querySelector(lifetimeSelector).textContent = `${formatNumber(points)} pts`;
   if (document.querySelector(barSelector)) document.querySelector(barSelector).style.width = `${percent}%`;
   if (document.querySelector(fromSelector)) document.querySelector(fromSelector).textContent = `${formatNumber(points)} pts`;
-  if (document.querySelector(toSelector)) document.querySelector(toSelector).textContent = next ? `${formatNumber(end)} pts · ${next.nome}` : 'Nível máximo';
+  if (document.querySelector(toSelector)) document.querySelector(toSelector).textContent = next ? `${formatNumber(end)} pts · ${next.nome}` : level ? 'Nível máximo' : 'Progresso indisponível';
   if (iconSelector && document.querySelector(iconSelector)) document.querySelector(iconSelector).replaceChildren(svgIcon('plant'));
 }
 
