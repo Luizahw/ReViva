@@ -1,5 +1,6 @@
 import { api, token, TOKEN_KEY, USER_KEY, feedback } from './api.js';
 import './theme.js';
+import './speech.js';
 
 if (token()) location.replace('dashboard.html');
 const loginForm = document.querySelector('#loginForm');

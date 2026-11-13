@@ -1,6 +1,7 @@
 import { api, saveUser, formatDate, formatNumber, element, feedback, logout } from './api.js';
 import { requireUser, mountLayout } from './layout.js';
 import { currentTheme, setTheme, accessibilityPreferences, setAccessibilityPreference, applyAccessibilityPreferences } from './theme.js';
+import './speech.js';
 
 const page = document.body.dataset.page;
 let user;
