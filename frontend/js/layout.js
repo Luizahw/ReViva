@@ -64,11 +64,8 @@ export function mountLayout(page, user) {
   const title = document.querySelector('[data-page-title]')?.textContent || 'ReViva';
   const topbar = document.createElement('div'); topbar.className = 'topbar-inner';
   const heading = document.createElement('div'); heading.className = 'topbar-heading';
-  const headerMark = document.createElement('span'); headerMark.className = 'topbar-logo';
-  const headerSymbol = document.createElement('span'); headerSymbol.className = 'topbar-logo-symbol'; headerSymbol.textContent = '\u267B\uFE0F'; headerSymbol.setAttribute('aria-hidden', 'true');
-  headerMark.append(headerSymbol, Object.assign(document.createElement('span'), { className: 'topbar-logo-name', textContent: 'ReViva' }));
-  const pageName = document.createElement('div'); pageName.className = 'topbar-title'; pageName.append(Object.assign(document.createElement('span'), { className: 'eyebrow', textContent: 'SUSTENTABILIDADE · RECICLAGEM E REUTILIZAÇÃO' }), Object.assign(document.createElement('strong'), { textContent: title }));
-  heading.append(headerMark, pageName);
+  const pageName = document.createElement('div'); pageName.className = 'topbar-title'; pageName.append(Object.assign(document.createElement('strong'), { textContent: title }));
+  heading.append(pageName);
   const actions = document.createElement('div'); actions.className = 'topbar-actions';
   const themeButton = document.createElement('button'); themeButton.type = 'button'; themeButton.className = 'icon-button theme-toggle'; themeButton.dataset.themeToggle = ''; themeButton.setAttribute('aria-label', 'Alternar tema');
   const themeIcon = document.createElement('span'); themeIcon.dataset.themeIcon = ''; themeIcon.append(icon('moon'));
