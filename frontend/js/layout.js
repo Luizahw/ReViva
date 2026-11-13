@@ -20,8 +20,12 @@ function icon(name, className = '') {
   return svg;
 }
 
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && !token()) location.replace('index.html');
+});
+
 export async function requireUser() {
-  if (!token()) { location.href = 'index.html'; throw new Error('Sessão encerrada.'); }
+  if (!token()) { location.replace('index.html'); throw new Error('Sessão encerrada.'); }
   const { usuario } = await api('/usuarios/perfil');
   localStorage.setItem('reviva_usuario', JSON.stringify(usuario));
   return usuario;

@@ -9,6 +9,11 @@ let adminData = { materials: [], points: [], rewards: [] };
 let dashboardSummaryLoaded = false;
 let dashboardRecyclingCount = null;
 
+window.addEventListener('reviva:logout', () => {
+  user = null;
+  adminData = { materials: [], points: [], rewards: [] };
+});
+
 function confirmAction(text) {
   const dialog = document.querySelector('#confirmDialog');
   if (!dialog?.showModal) return Promise.resolve(window.confirm(text));

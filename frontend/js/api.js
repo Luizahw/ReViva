@@ -9,7 +9,11 @@ export function cachedUser() {
 }
 export function saveUser(user) { localStorage.setItem(USER_KEY, JSON.stringify(user)); }
 export function clearSession() { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); }
-export function logout() { clearSession(); location.href = 'index.html'; }
+export function logout() {
+  clearSession();
+  window.dispatchEvent(new Event('reviva:logout'));
+  location.replace('index.html');
+}
 
 export async function api(path, options = {}) {
   const headers = {
@@ -24,7 +28,7 @@ export async function api(path, options = {}) {
   if (!response.ok) {
     if (response.status === 401 && token()) {
       clearSession();
-      location.href = 'index.html';
+      location.replace('index.html');
     }
     const error = new Error(data.mensagem || 'Não foi possível concluir a solicitação.');
     error.status = response.status;
